@@ -24,6 +24,12 @@ try {
  scene.fogColor=new B.Color3(.42,.43,.40);
  const camera=new B.FreeCamera('followCamera',new B.Vector3(0,5,-9),scene);
  camera.minZ=.2; camera.maxZ=450; camera.fov=.74; camera.inputs.clear();
+ const cinematic=new B.DefaultRenderingPipeline('pressburgCinematic',true,scene,[camera]);
+ cinematic.fxaaEnabled=true;cinematic.samples=1;
+ cinematic.bloomEnabled=true;cinematic.bloomThreshold=.82;cinematic.bloomWeight=matchMedia('(pointer:coarse)').matches?.08:.16;cinematic.bloomKernel=48;
+ scene.imageProcessingConfiguration.toneMappingEnabled=true;
+ scene.imageProcessingConfiguration.toneMappingType=B.ImageProcessingConfiguration.TONEMAPPING_ACES;
+ scene.imageProcessingConfiguration.exposure=1.05;scene.imageProcessingConfiguration.contrast=1.12;
  const hemi=new B.HemisphericLight('skyFill',new B.Vector3(0,1,0),scene);
  hemi.intensity=.68; hemi.groundColor=new B.Color3(.24,.20,.16);
  const sun=new B.DirectionalLight('lateSun',new B.Vector3(-.45,-1,.35),scene);
