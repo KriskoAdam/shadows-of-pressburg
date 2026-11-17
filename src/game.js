@@ -118,12 +118,15 @@ try {
    const legL=part(name+' left breeches',[-.2,.52,0],[.29,1,.32],dark),legR=part(name+' right breeches',[.2,.52,0],[.29,1,.32],dark);
    legL.setPivotPoint(new B.Vector3(0,.42,0));legR.setPivotPoint(new B.Vector3(0,.42,0));
    part(name+' left boot',[-.2,.13,-.055],[.34,.28,.48],leather);part(name+' right boot',[.2,.13,-.055],[.34,.28,.48],leather);
-   part(name+' sword scabbard',[.48,1.02,.18],[.12,.95,.15],leather).rotation.z=-.28;
-   const blade=part(name+' sword blade',[0,.49,-.035],[.095,.9,.035],steel,armR);
-   const point=B.MeshBuilder.CreateCylinder(name+' sword point',{diameterTop:0,diameterBottom:.095,height:.2,tessellation:4},scene);point.parent=armR;point.position.set(0,.98,-.035);point.material=steel;point.rotation.x=Math.PI/2;
-   part(name+' sword crossguard',[0,.05,-.035],[.42,.07,.1],gold,armR);
-   part(name+' sword grip',[0,-.13,-.035],[.09,.22,.1],leather,armR);
-   const pommel=sphere(name+' sword pommel',[0,-.26,-.035],.12,gold);pommel.parent=armR;pommel.position.set(0,-.26,-.035);
+   let blade=null;
+   if(role!=='civilian'){
+     part(name+' sword scabbard',[.48,1.02,.18],[.12,.95,.15],leather).rotation.z=-.28;
+     blade=part(name+' sword blade',[0,.49,-.035],[.095,.9,.035],steel,armR);
+     const point=B.MeshBuilder.CreateCylinder(name+' sword point',{diameterTop:0,diameterBottom:.095,height:.2,tessellation:4},scene);point.parent=armR;point.position.set(0,.98,-.035);point.material=steel;point.rotation.x=Math.PI/2;
+     part(name+' sword crossguard',[0,.05,-.035],[.42,.07,.1],gold,armR);
+     part(name+' sword grip',[0,-.13,-.035],[.09,.22,.1],leather,armR);
+     const pommel=sphere(name+' sword pommel',[0,-.26,-.035],.12,gold);pommel.parent=armR;pommel.position.set(0,-.26,-.035);
+   }
    if(role==='guard'){part(name+' shoulder plate L',[-.47,1.88,0],[.37,.24,.42],iron);part(name+' shoulder plate R',[.47,1.88,0],[.37,.24,.42],iron);part(name+' chest crest',[0,1.68,-.25],[.19,.25,.04],gold);}
    const parts=root.getChildMeshes();parts.forEach(m=>{m.scaling.scaleInPlace(scale);shadow.addShadowCaster(m);});
    return {root,armL,armR,legL,legR,phase:Math.random()*6.28,alive:true,weapon:blade};
