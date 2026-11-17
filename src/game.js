@@ -72,45 +72,40 @@ try {
  const box=(name,pos,scale,material,collide=true)=>{const m=B.MeshBuilder.CreateBox(name,{width:scale[0],height:scale[1],depth:scale[2]},scene);m.position.set(...pos);m.material=material;m.checkCollisions=collide;m.receiveShadows=true;return m;};
  const cyl=(name,pos,diam,height,material)=>{const m=B.MeshBuilder.CreateCylinder(name,{diameter:diam,height,tessellation:12},scene);m.position.set(...pos);m.material=material;m.checkCollisions=true;return m;};
  const roofPeak=(x,z,w,d,y,material)=>{const r=B.MeshBuilder.CreateCylinder('roof ridge',{diameterTop:0,diameterBottom:Math.max(w,d)*1.48,height:Math.max(w,d)*.62,tessellation:4},scene);r.rotation.y=Math.PI/4;r.scaling.x=w/Math.max(w,d);r.scaling.z=d/Math.max(w,d);r.position.set(x,y,z);r.material=material;r.checkCollisions=true;return r;};
- // Medieval street grid and varied rooflines
+ // Modular asset placements for the historic town. Models are generated as GLB files during deployment.
+ const housePlacements=[];
  for(let x=-5;x<=5;x++) for(let z=-4;z<=3;z++){
-   if(Math.abs(x)<=1&&z>=-1&&z<=1) continue;
-   if(z===3&&Math.abs(x)<3) continue;
-   const bx=x*17+(Math.sin(x*2+z)*2), bz=z*17+(Math.cos(z*3+x)*1.8);
-   if(bz>48) continue;
-   const w=11+((x*7+z*11+80)%4), d=10+((x*13-z*5+90)%4), h=9+((Math.abs(x*17+z*13))%9);
-   const body=box('merchant house',[bx,h/2,bz],[w,h,d],(x+z)%3===0?pale:stone);
-   const roofmat=(x+z)%2?roof:roof2;
-   const roofRise=Math.min(3.1,d*.27),roofHalf=d*.56;
-   const roofA=B.MeshBuilder.CreateBox('front pitched roof',{width:w+1.5,height:.42,depth:roofHalf},scene);
-   roofA.position.set(bx,h+roofRise*.48,bz-d*.25);roofA.rotation.x=-Math.atan2(roofRise,roofHalf);roofA.material=roofmat;roofA.checkCollisions=true;roofA.receiveShadows=true;
-   const roofB=B.MeshBuilder.CreateBox('rear pitched roof',{width:w+1.5,height:.42,depth:roofHalf},scene);
-   roofB.position.set(bx,h+roofRise*.48,bz+d*.25);roofB.rotation.x=Math.atan2(roofRise,roofHalf);roofB.material=roofmat;roofB.checkCollisions=true;roofB.receiveShadows=true;
-   box('roof ridge timber',[bx,h+roofRise,bz],[w+1.7,.24,.28],dark,false);
-   for(const sideZ of [-1,1])box('carved roof eave',[bx,h+.2,bz+sideZ*(d/2+.55)],[w+1.8,.28,.3],dark,false);
-   // timber framing and facade details
-   for(let side of [-1,1]){
-     const frontZ=bz+side*(d/2+.04);
-     for(let yy=2.2;yy<h-1;yy+=3.0) for(let xx=-w/2+2;xx<w/2-1;xx+=3.2){
-       const win=box('deep window',[bx+xx,yy,frontZ],[1.15,1.55,.12],dark,false);
-       const pane=box('window shadow',[bx+xx,yy,frontZ+side*.08],[.78,1.16,.05],iron,false);
-       box('window sill',[bx+xx,yy-.88,frontZ+side*.12],[1.35,.13,.28],pale,false);
-       for(const sx of [-1,1])box('stone window jamb',[bx+xx+sx*.57,yy,frontZ+side*.12],[.13,1.7,.18],pale,false);
-       box('stone window lintel',[bx+xx,yy+.84,frontZ+side*.12],[1.32,.14,.2],pale,false);
-       box('window crossbar vertical',[bx+xx,yy,frontZ+side*.16],[.055,1.08,.05],gold,false);
-       box('window crossbar horizontal',[bx+xx,yy,frontZ+side*.17],[.82,.055,.05],gold,false);
-       for(const sx of [-1,1])box('wooden shutter',[bx+xx+sx*.72,yy,frontZ+side*.18],[.25,1.2,.12],dark,false);
-     }
-     box('timber beam',[bx,h*.55,frontZ],[w,.16,.18],dark,false);
-     box('timber upright',[bx-w*.38,h*.5,frontZ],[.16,h*.9,.18],dark,false);
-     box('timber upright',[bx+w*.38,h*.5,frontZ],[.16,h*.9,.18],dark,false);
-   }
-   // chimney
-   box('chimney',[bx+w*.25,h+1.8,bz-d*.2],[1.1,3.1,1.1],stone);
-   box('front entrance',[bx,h*.48,bz+d/2+.12],[1.65,2.9,.22],dark,false);box('door arch lintel',[bx,h*.48+1.52,bz+d/2+.18],[2.05,.2,.28],pale,false);
-   if((x+z)%2===0){box('wooden balcony floor',[bx,h*.52,bz-d/2-.75],[w*.62,.2,1.4],dark,false);box('balcony rail',[bx,h*.52+.62,bz-d/2-1.35],[w*.62,.12,.12],iron,false);for(let j=-2;j<=2;j++)box('balcony baluster',[bx+j*w*.12,h*.52+.32,bz-d/2-1.35],[.07,.6,.07],iron,false);}
-   for(let j=-1;j<=1;j++){box('roof dormer',[bx+j*w*.25,h+1.5,bz-d*.28],[1.3,1.3,1.2],pale,false);box('dormer window',[bx+j*w*.25,h+1.55,bz-d*.28-.62],[.62,.72,.08],dark,false);}
+   if(Math.abs(x)<=1&&z>=-1&&z<=1)continue;
+   if(z===3&&Math.abs(x)<3)continue;
+   const bx=x*17+(Math.sin(x*2+z)*2),bz=z*17+(Math.cos(z*3+x)*1.8);
+   if(bz>48)continue;
+   const w=11+((x*7+z*11+80)%4),d=10+((x*13-z*5+90)%4),h=9+((Math.abs(x*17+z*13))%9);
+   housePlacements.push({x:bx,z:bz,sx:w/10,sy:h/10,sz:d/9});
  }
+ const loadGLB=async(file)=>B.SceneLoader.ImportMeshAsync("", "./assets/",file+".glb",scene);
+ const cloneAsset=(asset,position,scale,name)=>{
+   const root=new B.TransformNode(name+" root",scene);root.position.copyFrom(position);root.scaling.copyFrom(scale);
+   for(const src of asset.meshes.filter(m=>m.geometry)){
+     const clone=src.clone(name+" "+src.name,root,true);
+     clone.setEnabled(true);clone.isVisible=true;clone.checkCollisions=true;clone.receiveShadows=true;
+     if(!matchMedia('(pointer:coarse)').matches)shadow.addShadowCaster(clone);
+   }
+   return root;
+ };
+ const assetPromise=Promise.all([
+   loadGLB("pressburg_house"),loadGLB("market_stall"),loadGLB("pressburg_tree"),loadGLB("oak_barrel"),loadGLB("wooden_cart")
+ ]).then(([houses,stalls,trees,barrels,carts])=>{
+   houses.meshes.forEach(m=>m.setEnabled(false));stalls.meshes.forEach(m=>m.setEnabled(false));
+   trees.meshes.forEach(m=>m.setEnabled(false));barrels.meshes.forEach(m=>m.setEnabled(false));carts.meshes.forEach(m=>m.setEnabled(false));
+   housePlacements.forEach((p,n)=>cloneAsset(houses,new B.Vector3(p.x,0,p.z),new B.Vector3(p.sx,p.sy,p.sz),"Pressburg house "+n));
+   for(const [x,z,rot] of [[-12,-5,0],[12,-5,Math.PI],[ -13,8,.2],[13,8,-.2]])
+     {const o=cloneAsset(stalls,new B.Vector3(x,0,z),new B.Vector3(1,1,1),"Market stall");o.rotation.y=rot;}
+   for(const [x,z,s] of [[-69,-12,1.2],[-64,17,1.1],[62,-22,1.2],[68,18,1.15],[48,62,1.2],[-27,58,1.25]])
+     cloneAsset(trees,new B.Vector3(x,0,z),new B.Vector3(s,s,s),"Pressburg tree");
+   for(let n=0;n<12;n++)cloneAsset(barrels,new B.Vector3(-15+(n%6)*5,.0,11+Math.floor(n/6)*4),new B.Vector3(1,1,1),"Oak barrel");
+   for(const [x,z] of [[-20,12],[19,13],[25,38]])cloneAsset(carts,new B.Vector3(x,0,z),new B.Vector3(1,1,1),"Merchant cart");
+   setStatus("3D modely Prešporka boli načítané.");
+ }).catch(err=>{console.error("GLB assets failed",err);setStatus("Používam záložné modely prostredia.");});
  // Main thoroughfares, lanes and a fortified river crossing
  const roadNorth=B.MeshBuilder.CreateGround('north south processional street',{width:9,height:125},scene);roadNorth.position.set(0,.025,-8);roadNorth.material=road;roadNorth.checkCollisions=false;
  const roadWest=B.MeshBuilder.CreateGround('west market street',{width:130,height:8},scene);roadWest.position.set(-3,.026,-17);roadWest.material=road;
@@ -315,7 +310,7 @@ try {
      if(p>=100){clearInterval(timer);setTimeout(()=>{loading.style.display='none';started=true;$('pause').style.display='block';toast('Prešporok, rok 1567. Nájdite Annu.');if(matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.();},250);}
    },110);
  });
- start.disabled=false;start.textContent='ZAČAŤ HRU';setStatus('3D svet je pripravený.');$('errorBox').style.display='none';
+ start.disabled=true;start.textContent='NAČÍTAVAM 3D MODELY…';assetPromise.finally(()=>{start.disabled=false;start.textContent='ZAČAŤ HRU';});setStatus('Načítavam 3D modely Prešporka…');$('errorBox').style.display='none';
  // Camera, movement and world simulation
  const vForward=new B.Vector3(),vRight=new B.Vector3();
  function update(dt,t){
