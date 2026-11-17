@@ -59,9 +59,25 @@ try {
      box('timber upright',[bx+w*.38,h*.5,frontZ],[.16,h*.9,.18],dark,false);
    }
    // chimney
-   box('chimney',[bx+w*.25,h+1.8,bz-d*.2],[1.1,3.1,1.1],stone);\n   box('front entrance',[bx,h*.48,bz+d/2+.12],[1.65,2.9,.22],dark,false);box('door arch lintel',[bx,h*.48+1.52,bz+d/2+.18],[2.05,.2,.28],pale,false);\n   if((x+z)%2===0){box('wooden balcony floor',[bx,h*.52,bz-d/2-.75],[w*.62,.2,1.4],dark,false);box('balcony rail',[bx,h*.52+.62,bz-d/2-1.35],[w*.62,.12,.12],iron,false);for(let j=-2;j<=2;j++)box('balcony baluster',[bx+j*w*.12,h*.52+.32,bz-d/2-1.35],[.07,.6,.07],iron,false);}\n   for(let j=-1;j<=1;j++){box('roof dormer',[bx+j*w*.25,h+1.5,bz-d*.28],[1.3,1.3,1.2],pale,false);box('dormer window',[bx+j*w*.25,h+1.55,bz-d*.28-.62],[.62,.72,.08],dark,false);}
+   box('chimney',[bx+w*.25,h+1.8,bz-d*.2],[1.1,3.1,1.1],stone);
+   box('front entrance',[bx,h*.48,bz+d/2+.12],[1.65,2.9,.22],dark,false);box('door arch lintel',[bx,h*.48+1.52,bz+d/2+.18],[2.05,.2,.28],pale,false);
+   if((x+z)%2===0){box('wooden balcony floor',[bx,h*.52,bz-d/2-.75],[w*.62,.2,1.4],dark,false);box('balcony rail',[bx,h*.52+.62,bz-d/2-1.35],[w*.62,.12,.12],iron,false);for(let j=-2;j<=2;j++)box('balcony baluster',[bx+j*w*.12,h*.52+.32,bz-d/2-1.35],[.07,.6,.07],iron,false);}
+   for(let j=-1;j<=1;j++){box('roof dormer',[bx+j*w*.25,h+1.5,bz-d*.28],[1.3,1.3,1.2],pale,false);box('dormer window',[bx+j*w*.25,h+1.55,bz-d*.28-.62],[.62,.72,.08],dark,false);}
  }
- // Main thoroughfares, lanes and a fortified river crossing\n const roadNorth=B.MeshBuilder.CreateGround('north south processional street',{width:9,height:125},scene);roadNorth.position.set(0,.025,-8);roadNorth.material=road;roadNorth.checkCollisions=false;\n const roadWest=B.MeshBuilder.CreateGround('west market street',{width:130,height:8},scene);roadWest.position.set(-3,.026,-17);roadWest.material=road;\n const roadEast=B.MeshBuilder.CreateGround('east market street',{width:125,height:8},scene);roadEast.position.set(5,.027,22);roadEast.material=road;\n // Medieval stone bridge over the Danube with parapets and repeated piers\n const bridge=box('Danube stone bridge',[0,2.2,76],[12,1.2,64],stone);bridge.checkCollisions=true;\n box('bridge parapet left',[-5.7,3.2,76],[.65,1.5,64],pale);box('bridge parapet right',[5.7,3.2,76],[.65,1.5,64],pale);\n for(let z=48;z<=104;z+=14){cyl('bridge pier',[0,1,z],2.8,4,stone);for(let x of [-4.4,4.4])box('bridge lantern plinth',[x,4,z],[.5,1.2,.5],dark);}\n // Outer defensive wall and gate towers define a traversable historic city silhouette\n for(let x=-82;x<=82;x+=8){box('north city curtain wall',[x,5,-63],[7.8,10,2.6],stone);if(x%24===0){box('north wall merlon',[x,10.8,-63],[1.5,1.8,3.1],pale);}}\n for(let z=-58;z<=42;z+=8){box('west city curtain wall',[-82,5,z],[2.6,10,7.8],stone);box('east city curtain wall',[82,5,z],[2.6,10,7.8],stone);}\n for(const [x,z] of [[-82,-63],[82,-63],[-82,42],[82,42]]){cyl('round defensive bastion',[x,8,z],10,16,stone);roofPeak(x,z,10,10,17,roof2);}\n // Broad market square, paving, fountain\n for(let i=0;i<130;i++){const x=-17+Math.random()*34,z=-14+Math.random()*28;const p=box('hand-laid market cobble',[x,.075,z],[.65+Math.random()*.55,.09,.42+Math.random()*.45],i%4===0?stone:road,false);p.rotation.y=Math.random()*Math.PI;}
+ // Main thoroughfares, lanes and a fortified river crossing
+ const roadNorth=B.MeshBuilder.CreateGround('north south processional street',{width:9,height:125},scene);roadNorth.position.set(0,.025,-8);roadNorth.material=road;roadNorth.checkCollisions=false;
+ const roadWest=B.MeshBuilder.CreateGround('west market street',{width:130,height:8},scene);roadWest.position.set(-3,.026,-17);roadWest.material=road;
+ const roadEast=B.MeshBuilder.CreateGround('east market street',{width:125,height:8},scene);roadEast.position.set(5,.027,22);roadEast.material=road;
+ // Medieval stone bridge over the Danube with parapets and repeated piers
+ const bridge=box('Danube stone bridge',[0,2.2,76],[12,1.2,64],stone);bridge.checkCollisions=true;
+ box('bridge parapet left',[-5.7,3.2,76],[.65,1.5,64],pale);box('bridge parapet right',[5.7,3.2,76],[.65,1.5,64],pale);
+ for(let z=48;z<=104;z+=14){cyl('bridge pier',[0,1,z],2.8,4,stone);for(let x of [-4.4,4.4])box('bridge lantern plinth',[x,4,z],[.5,1.2,.5],dark);}
+ // Outer defensive wall and gate towers define a traversable historic city silhouette
+ for(let x=-82;x<=82;x+=8){box('north city curtain wall',[x,5,-63],[7.8,10,2.6],stone);if(x%24===0){box('north wall merlon',[x,10.8,-63],[1.5,1.8,3.1],pale);}}
+ for(let z=-58;z<=42;z+=8){box('west city curtain wall',[-82,5,z],[2.6,10,7.8],stone);box('east city curtain wall',[82,5,z],[2.6,10,7.8],stone);}
+ for(const [x,z] of [[-82,-63],[82,-63],[-82,42],[82,42]]){cyl('round defensive bastion',[x,8,z],10,16,stone);roofPeak(x,z,10,10,17,roof2);}
+ // Broad market square, paving, fountain
+ for(let i=0;i<130;i++){const x=-17+Math.random()*34,z=-14+Math.random()*28;const p=box('hand-laid market cobble',[x,.075,z],[.65+Math.random()*.55,.09,.42+Math.random()*.45],i%4===0?stone:road,false);p.rotation.y=Math.random()*Math.PI;}
  box('market paving',[0,.015,0],[37,.08,31],pale,false);
  cyl('market fountain base',[0,.5,2],4.4,1,stone);
  cyl('fountain basin',[0,1.05,2],3.4,.35,gold);
@@ -85,7 +101,8 @@ try {
  box('Pressburg castle',[ -48,18,40],[31,22,24],pale);
  for(const [x,z] of [[-63,29],[-33,29],[-63,51],[-33,51]]){box('castle tower',[x,25,z],[7,29,7],stone);roofPeak(x,z,8,8,42,roof2);}
  box('castle inner keep',[-48,32,40],[13,12,12],stone);
- // Docks and boats\n const crane=box('harbour crane post',[39,5,43],[.65,10,.65],dark);box('harbour crane arm',[39,9.8,43],[.6,.6,9],dark);box('crane counterweight',[39,8,39],[2,1.5,2],stone);cyl('crane pulley',[39,8.7,47],.8,.35,iron);for(let i=0;i<6;i++){box('cargo crate',[18+i*2.2,.8,39+(i%2)*2],[1.5,1.5,1.5],dark);}
+ // Docks and boats
+ const crane=box('harbour crane post',[39,5,43],[.65,10,.65],dark);box('harbour crane arm',[39,9.8,43],[.6,.6,9],dark);box('crane counterweight',[39,8,39],[2,1.5,2],stone);cyl('crane pulley',[39,8.7,47],.8,.35,iron);for(let i=0;i<6;i++){box('cargo crate',[18+i*2.2,.8,39+(i%2)*2],[1.5,1.5,1.5],dark);}
  for(let i=0;i<4;i++){box('dock plank',[22+i*2,.1,47],[1.8,.35,18],dark,false);}
  const boat=box('merchant barge',[28,.15,58],[7,.65,16],dark,false);boat.rotation.y=.12;
  box('mast',[28,5,58],[.25,10,.25],dark,false);
@@ -131,7 +148,9 @@ try {
    const parts=root.getChildMeshes();parts.forEach(m=>{m.scaling.scaleInPlace(scale);shadow.addShadowCaster(m);});
    return {root,armL,armR,legL,legR,phase:Math.random()*6.28,alive:true,weapon:blade};
  }
- const player=person('Matej Varga',0,8,blue,1,'hero');player.root.position.y=0;\n const hood=B.MeshBuilder.CreateSphere('Matej dark hood',{diameter:.62,segments:16},scene);hood.parent=player.root;hood.position.set(0,2.43,.12);hood.scaling.set(1,.9,.9);hood.material=leather;shadow.addShadowCaster(hood);\n const cloak=B.MeshBuilder.CreateBox('Matej travelling cloak',{width:.78,height:1.2,depth:.16},scene);cloak.parent=player.root;cloak.position.set(0,1.28,.29);cloak.material=blue;cloak.rotation.x=-.08;shadow.addShadowCaster(cloak);
+ const player=person('Matej Varga',0,8,blue,1,'hero');player.root.position.y=0;
+ const hood=B.MeshBuilder.CreateSphere('Matej dark hood',{diameter:.62,segments:16},scene);hood.parent=player.root;hood.position.set(0,2.43,.12);hood.scaling.set(1,.9,.9);hood.material=leather;shadow.addShadowCaster(hood);
+ const cloak=B.MeshBuilder.CreateBox('Matej travelling cloak',{width:.78,height:1.2,depth:.16},scene);cloak.parent=player.root;cloak.position.set(0,1.28,.29);cloak.material=blue;cloak.rotation.x=-.08;shadow.addShadowCaster(cloak);
  // Collision capsule proxy; visible rig follows proxy
  const collider=B.MeshBuilder.CreateCapsule('player collision',{height:2.2,radius:.42},scene);
  collider.isVisible=false;collider.checkCollisions=true;collider.ellipsoid=new B.Vector3(.48,1.05,.48);collider.ellipsoidOffset=new B.Vector3(0,1.05,0);collider.position.set(0,0,8);
@@ -165,7 +184,8 @@ try {
  function interact(){if(B.Vector3.Distance(player.root.position,anna.root.position)<4){if(objective===0){objective=1;toast('Anna: „List je ukrytý. Vezmi si ho.“');}else if(objective===1){objective=2;toast('Získal si zapečatený list. Zamier k archívu.');}else toast('Anna: „Ponáhľaj sa, stráže sú blízko.“');updateUI();return;}if(objective===2&&B.Vector3.Distance(player.root.position,new B.Vector3(0,0,-35))<12){objective=3;toast('Archív je otvorený. Stráže ťa spozorovali!');alert=65;updateUI();return;}toast('V blízkosti nie je nič na preskúmanie.');}
  function climb(){if(!onGround){jumpVelocity=5.8;toast('Výstup');}else{jumpVelocity=5.8;onGround=false;}}
  function dodge(){const dir=new B.Vector3(Math.sin(yaw),0,Math.cos(yaw));collider.moveWithCollisions(dir.scale(-3.8));}
- bindAction('jump',jump);bindAction('attack',attack);bindAction('interact',interact);bindAction('climb',climb);bindAction('dodge',dodge);bindAction('stealth',()=>{stealth=!stealth;toast(stealth?'Plíženie aktivované':'Plíženie vypnuté');});\n const sprintButton=$('sprint');if(sprintButton){sprintButton.addEventListener('pointerdown',e=>{e.preventDefault();sprinting=true;sprintButton.setPointerCapture(e.pointerId);});const stopSprint=()=>sprinting=false;sprintButton.addEventListener('pointerup',stopSprint);sprintButton.addEventListener('pointercancel',stopSprint);sprintButton.addEventListener('lostpointercapture',stopSprint);}
+ bindAction('jump',jump);bindAction('attack',attack);bindAction('interact',interact);bindAction('climb',climb);bindAction('dodge',dodge);bindAction('stealth',()=>{stealth=!stealth;toast(stealth?'Plíženie aktivované':'Plíženie vypnuté');});
+ const sprintButton=$('sprint');if(sprintButton){sprintButton.addEventListener('pointerdown',e=>{e.preventDefault();sprinting=true;sprintButton.setPointerCapture(e.pointerId);});const stopSprint=()=>sprinting=false;sprintButton.addEventListener('pointerup',stopSprint);sprintButton.addEventListener('pointercancel',stopSprint);sprintButton.addEventListener('lostpointercapture',stopSprint);}
  $('pause').addEventListener('click',pauseGame);$('resume').addEventListener('click',()=>{paused=false;$('pauseScreen').style.display='none';$('pause').style.display='block';lastTime=performance.now();});
  function pauseGame(){if(!started)return;paused=true;$('pauseScreen').style.display='flex';$('pause').style.display='none';if(document.pointerLockElement)document.exitPointerLock();}
  start.addEventListener('click',()=>{if(start.disabled)return;started=true;overlay.style.display='none';$('pause').style.display='block';toast('Prešporok, rok 1567. Nájdite Annu.');if(matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.();});
@@ -192,12 +212,15 @@ try {
    const distance=cameraDistance, elev=2.65+pitch*5.4;
    const desired=player.root.position.add(new B.Vector3(-Math.sin(yaw)*distance,elev,-Math.cos(yaw)*distance));
    camera.position=B.Vector3.Lerp(camera.position,desired,1-Math.pow(.0008,dt));
-   camera.setTarget(player.root.position.add(new B.Vector3(0,1.58,0)));\n   const camOrigin=player.root.position.add(new B.Vector3(0,1.5,0));const camDir=camera.position.subtract(camOrigin).normalize();const camRay=new B.Ray(camOrigin,camDir,cameraDistance+1);const camHit=scene.pickWithRay(camRay,m=>m.checkCollisions&&m!==collider&&!m.name.includes('player'));if(camHit&&camHit.hit&&camHit.distance<cameraDistance)camera.position=B.Vector3.Lerp(camera.position,camOrigin.add(camDir.scale(Math.max(1.8,camHit.distance-.45))),.35);
+   camera.setTarget(player.root.position.add(new B.Vector3(0,1.58,0)));
+   const camOrigin=player.root.position.add(new B.Vector3(0,1.5,0));const camDir=camera.position.subtract(camOrigin).normalize();const camRay=new B.Ray(camOrigin,camDir,cameraDistance+1);const camHit=scene.pickWithRay(camRay,m=>m.checkCollisions&&m!==collider&&!m.name.includes('player'));if(camHit&&camHit.hit&&camHit.distance<cameraDistance)camera.position=B.Vector3.Lerp(camera.position,camOrigin.add(camDir.scale(Math.max(1.8,camHit.distance-.45))),.35);
    if(performance.now()>toastUntil)$('toast').textContent='';
    if(hp<=0){hp=100;alert=0;collider.position.set(0,0,8);toast('Matej sa vrátil na bezpečné miesto.');}
  }
  scene.onBeforeRenderObservable.add(()=>{const now=performance.now(),dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;update(dt,now);});
- // Environment polish: sky gradient, sun disc, subtle particles\n const dust=new B.ParticleSystem('golden dust',420,scene);dust.particleTexture=new B.Texture('https://assets.babylonjs.com/textures/flare.png',scene);dust.emitter=new B.Vector3(0,3,0);dust.minEmitBox=new B.Vector3(-65,0,-55);dust.maxEmitBox=new B.Vector3(65,22,55);dust.color1=new B.Color4(.78,.65,.43,.23);dust.color2=new B.Color4(.55,.62,.63,.12);dust.minSize=.025;dust.maxSize=.08;dust.minLifeTime=5;dust.maxLifeTime=12;dust.emitRate=26;dust.gravity=new B.Vector3(0,.025,0);dust.start();\n for(let i=0;i<8;i++){const x=-28+i*8,z=-24;const flame=B.MeshBuilder.CreateSphere('torch glow',{diameter:.42,segments:8},scene);flame.position.set(x,3.7,z);const fm=new B.StandardMaterial('torch glow mat '+i,scene);fm.emissiveColor=new B.Color3(1,.42,.12);fm.disableLighting=true;flame.material=fm;const light=new B.PointLight('torch light '+i,new B.Vector3(x,3.7,z),scene);light.diffuse=new B.Color3(1,.48,.19);light.intensity=.55;light.range=11;}
+ // Environment polish: sky gradient, sun disc, subtle particles
+ const dust=new B.ParticleSystem('golden dust',420,scene);dust.particleTexture=new B.Texture('https://assets.babylonjs.com/textures/flare.png',scene);dust.emitter=new B.Vector3(0,3,0);dust.minEmitBox=new B.Vector3(-65,0,-55);dust.maxEmitBox=new B.Vector3(65,22,55);dust.color1=new B.Color4(.78,.65,.43,.23);dust.color2=new B.Color4(.55,.62,.63,.12);dust.minSize=.025;dust.maxSize=.08;dust.minLifeTime=5;dust.maxLifeTime=12;dust.emitRate=26;dust.gravity=new B.Vector3(0,.025,0);dust.start();
+ for(let i=0;i<8;i++){const x=-28+i*8,z=-24;const flame=B.MeshBuilder.CreateSphere('torch glow',{diameter:.42,segments:8},scene);flame.position.set(x,3.7,z);const fm=new B.StandardMaterial('torch glow mat '+i,scene);fm.emissiveColor=new B.Color3(1,.42,.12);fm.disableLighting=true;flame.material=fm;const light=new B.PointLight('torch light '+i,new B.Vector3(x,3.7,z),scene);light.diffuse=new B.Color3(1,.48,.19);light.intensity=.55;light.range=11;}
  const sky=B.MeshBuilder.CreateSphere('sky dome',{diameter:420,segments:24},scene);sky.isPickable=false;sky.infiniteDistance=true;sky.material=new B.StandardMaterial('sky material',scene);sky.material.backFaceCulling=false;sky.material.disableLighting=true;sky.material.emissiveColor=new B.Color3(.18,.25,.29);sky.material.alpha=.18;
  // Add shadows to all static architecture
  scene.meshes.forEach(m=>{if(m.checkCollisions&&m!==ground&&m!==collider)shadow.addShadowCaster(m);});
