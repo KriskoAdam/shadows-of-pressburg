@@ -19,6 +19,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Generate optimized game-ready GLB models
+        run: |
+          python -m pip install --quiet trimesh numpy
+          python tools/generate_assets.py
       - name: Validate game JavaScript
         run: node --check src/game.js
       - name: Configure Pages
