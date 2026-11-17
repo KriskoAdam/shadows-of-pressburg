@@ -26,7 +26,7 @@ try {
  camera.minZ=.2; camera.maxZ=450; camera.fov=.74; camera.inputs.clear();
  const cinematic=new B.DefaultRenderingPipeline('pressburgCinematic',true,scene,[camera]);
  cinematic.fxaaEnabled=true;cinematic.samples=1;
- cinematic.bloomEnabled=true;cinematic.bloomThreshold=.82;cinematic.bloomWeight=matchMedia('(pointer:coarse)').matches?.08:.16;cinematic.bloomKernel=48;
+ cinematic.bloomEnabled=true;cinematic.bloomThreshold=.82;cinematic.bloomWeight=matchMedia('(pointer:coarse)').matches ? .08 : .16;cinematic.bloomKernel=48;
  scene.imageProcessingConfiguration.toneMappingEnabled=true;
  scene.imageProcessingConfiguration.toneMappingType=B.ImageProcessingConfiguration.TONEMAPPING_ACES;
  scene.imageProcessingConfiguration.exposure=1.05;scene.imageProcessingConfiguration.contrast=1.12;
@@ -328,7 +328,7 @@ try {
    const speed=stealth?1.65:(sprinting||keys.ShiftLeft||keys.ShiftRight?7.8:4.5);
    const forward=new B.Vector3(Math.sin(yaw),0,Math.cos(yaw)),right=new B.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
    const delta=forward.scale(iy*speed*dt).add(right.scale(ix*speed*dt));
-   if(mag>.08){collider.moveWithCollisions(delta);player.root.rotation.y=Math.atan2(delta.x,delta.z)+Math.PI;player.phase+=dt*(sprinting?11:7);player.legL.rotation.x=Math.sin(player.phase)*.48;player.legR.rotation.x=-Math.sin(player.phase)*.48;player.armL.rotation.x=-Math.sin(player.phase)*.28;player.armR.rotation.x=Math.sin(player.phase)*.28;player.root.position.y+=Math.abs(Math.sin(player.phase*2))*(sprinting?.055:.025);}else{player.legL.rotation.x*=.72;player.legR.rotation.x*=.72;player.armL.rotation.x*=.72;player.armR.rotation.x*=.72;player.root.position.y=B.Scalar.Lerp(player.root.position.y,collider.position.y,.22);}
+   if(mag>.08){collider.moveWithCollisions(delta);player.root.rotation.y=Math.atan2(delta.x,delta.z)+Math.PI;player.phase+=dt*(sprinting?11:7);player.legL.rotation.x=Math.sin(player.phase)*.48;player.legR.rotation.x=-Math.sin(player.phase)*.48;player.armL.rotation.x=-Math.sin(player.phase)*.28;player.armR.rotation.x=Math.sin(player.phase)*.28;player.root.position.y+=Math.abs(Math.sin(player.phase*2))*(sprinting ? .055 : .025);}else{player.legL.rotation.x*=.72;player.legR.rotation.x*=.72;player.armL.rotation.x*=.72;player.armR.rotation.x*=.72;player.root.position.y=B.Scalar.Lerp(player.root.position.y,collider.position.y,.22);}
    jumpVelocity-=18*dt;collider.moveWithCollisions(new B.Vector3(0,jumpVelocity*dt,0));if(collider.position.y<=0){collider.position.y=0;jumpVelocity=0;onGround=true;}else onGround=false;
    player.root.position.copyFrom(collider.position);player.root.position.y=collider.position.y;
    // Guards investigate and pursue when visible / noisy
