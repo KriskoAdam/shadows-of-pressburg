@@ -32,6 +32,8 @@ try {
  const mat=(name,color,rough=.9,metal=0)=>{const m=new B.PBRMaterial(name,scene);m.albedoColor=B.Color3.FromHexString(color);m.roughness=rough;m.metallic=metal;return m;};
  const stone=mat('warm limestone','#938575'), pale=mat('aged plaster','#c0ae91'), dark=mat('timber','#49382b'), roof=mat('terracotta','#70483a'), roof2=mat('slate','#454b4d'), road=mat('cobblestone','#55534e'), water=mat('Danube','#263f48',.24,.25), iron=mat('forged iron','#343b3b',.42,.65), gold=mat('aged brass','#b18a4c',.3,.7), cloth=mat('traveller wool','#273d43'), skin=mat('skin','#b98968'), white=mat('linen','#d8cdb7'), red=mat('guard livery','#743b32'), green=mat('merchant green','#53634b'), leather=mat('dark leather','#30251f',.78), steel=mat('tempered steel','#9ba5a4',.24,.82), blue=mat('indigo cloth','#283c55');
  const ground=B.MeshBuilder.CreateGround('city ground',{width:230,height:230,subdivisions:2},scene);ground.position.y=-.15;ground.material=road;ground.checkCollisions=true;ground.receiveShadows=true;
+ // Start rendering as soon as the base scene exists; later construction errors must not leave a blank canvas.
+ let renderFault=null; engine.runRenderLoop(()=>{try{if(!engine.isDisposed())scene.render();}catch(e){renderFault=e;const eb=$('errorBox');if(eb){eb.style.display='block';eb.textContent='Chyba vykresľovania: '+e.message;}}});
  const river=B.MeshBuilder.CreateGround('Danube',{width:110,height:58,subdivisions:32},scene);river.position.set(0,-.11,77);river.material=water;river.isPickable=false;
  const box=(name,pos,scale,material,collide=true)=>{const m=B.MeshBuilder.CreateBox(name,{width:scale[0],height:scale[1],depth:scale[2]},scene);m.position.set(...pos);m.material=material;m.checkCollisions=collide;m.receiveShadows=true;return m;};
  const cyl=(name,pos,diam,height,material)=>{const m=B.MeshBuilder.CreateCylinder(name,{diameter:diam,height,tessellation:12},scene);m.position.set(...pos);m.material=material;m.checkCollisions=true;return m;};
@@ -196,7 +198,7 @@ try {
    if(!started||paused)return;
    const gp=navigator.getGamepads?.()[0];let ix=moveX,iy=moveY;
    if(keys.KeyW||keys.ArrowUp)iy+=1;if(keys.KeyS||keys.ArrowDown)iy-=1;if(keys.KeyA||keys.ArrowLeft)ix-=1;if(keys.KeyD||keys.ArrowRight)ix+=1;
-   if(gp){ix+=gp.axes[0]||0;iy-=gp.axes[1]||0;if(gp.buttons[0]?.pressed)jump();}
+   if(gp){ix+=gp.axes[0]||0;iy-=gp.axes[1]||0;if(gp.buttons[0]?.pressed)jump();if(gp.buttons[2]?.pressed)attack();if(gp.buttons[1]?.pressed)dodge();if(gp.buttons[3]?.pressed)interact();if(gp.buttons[4]?.pressed)stealth=true;if(gp.buttons[5]?.pressed)sprinting=true;if(gp.buttons[6]?.pressed)climb();if(gp.buttons[7]?.pressed)sprinting=true;yaw+=(gp.axes[2]||0)*dt*2.4;pitch=B.Scalar.Clamp(pitch+(gp.axes[3]||0)*dt*1.4,-.18,.58);}
    if(keys.Space&&!keys._space){jump();keys._space=true;}if(!keys.Space)keys._space=false;if(keys.KeyE){interact();keys.KeyE=false;}if(keys.KeyF){attack();keys.KeyF=false;}if(keys.KeyQ){climb();keys.KeyQ=false;}if(keys.KeyX){dodge();keys.KeyX=false;}
    const mag=Math.hypot(ix,iy);if(mag>1){ix/=mag;iy/=mag;}
    const speed=stealth?1.65:(sprinting||keys.ShiftLeft||keys.ShiftRight?7.8:4.5);
@@ -207,6 +209,7 @@ try {
    player.root.position.copyFrom(collider.position);player.root.position.y=collider.position.y;
    // Guards investigate and pursue when visible / noisy
    for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(g.root.position,player.root.position);if(dist<17&&(!stealth||dist<6)){alert=Math.min(100,alert+dt*(dist<7?28:9));const d=player.root.position.subtract(g.root.position);d.y=0;d.normalize();g.root.position.addInPlace(d.scale(dt*(dist<4?1.8:2.7)));g.root.rotation.y=Math.atan2(d.x,d.z);if(dist<1.8&&t%900<dt*1000){hp=Math.max(0,hp-7);$('hp').style.width=hp+'%';}}else{g.root.position.x+=Math.sin(t*.0003+g.phase)*dt*.25;}}
+   if(!gp?.buttons[4]?.pressed&&gp)stealth=false;if(!gp?.buttons[5]?.pressed&&!gp?.buttons[7]?.pressed&&gp)sprinting=false;
    if(alert>0)alert=Math.max(0,alert-dt*(stealth?8:2.4));updateUI();
    // Camera behind character; pitch controls elevation
    const distance=cameraDistance, elev=2.65+pitch*5.4;
@@ -224,13 +227,14 @@ try {
  const sky=B.MeshBuilder.CreateSphere('sky dome',{diameter:420,segments:24},scene);sky.isPickable=false;sky.infiniteDistance=true;sky.material=new B.StandardMaterial('sky material',scene);sky.material.backFaceCulling=false;sky.material.disableLighting=true;sky.material.emissiveColor=new B.Color3(.18,.25,.29);sky.material.alpha=.18;
  // Add shadows to all static architecture
  scene.meshes.forEach(m=>{if(m.checkCollisions&&m!==ground&&m!==collider)shadow.addShadowCaster(m);});
- engine.runRenderLoop(()=>{if(!engine.isDisposed())scene.render();});
  window.addEventListener('resize',()=>engine.resize());
  window.addEventListener('contextmenu',e=>e.preventDefault());
  setStatus('Svet Prešporka bol úspešne načítaný.');
+ window.addEventListener('unhandledrejection',e=>{const eb=$('errorBox');if(eb){eb.style.display='block';eb.textContent='Chyba hry: '+(e.reason?.message||e.reason||'neznáma chyba');}});
 } catch(err) {
  console.error(err);setStatus('Chyba 3D enginu: '+err.message);
- const eb=$('errorBox');eb.style.display='block';eb.textContent=String(err.stack||err);
+ const eb=$('errorBox');eb.style.display='block';eb.textContent='3D svet sa nepodarilo dokončiť: '+err.message+' — obnov stránku a skús to znova.';
+ if(overlay)overlay.style.display='flex';
 }
 }
 })();
