@@ -30,9 +30,9 @@ try {
  sun.position=new B.Vector3(65,90,-55); sun.intensity=2.1;
  const shadow=new B.ShadowGenerator(2048,sun); shadow.useBlurExponentialShadowMap=true; shadow.blurKernel=24; shadow.bias=.0005;
  const mat=(name,color,rough=.9,metal=0)=>{const m=new B.PBRMaterial(name,scene);m.albedoColor=B.Color3.FromHexString(color);m.roughness=rough;m.metallic=metal;return m;};
- const stone=mat('warm limestone','#938575'), pale=mat('aged plaster','#c0ae91'), dark=mat('timber','#49382b'), roof=mat('terracotta','#70483a'), roof2=mat('slate','#454b4d'), road=mat('cobblestone','#55534e'), water=mat('Danube','#263f48',.24,.25), iron=mat('iron','#343b3b',.42,.65), gold=mat('brass','#b18a4c',.3,.7), cloth=mat('traveller wool','#273d43'), skin=mat('skin','#b98968'), white=mat('linen','#d8cdb7'), red=mat('guard livery','#743b32'), green=mat('merchant green','#53634b');
+ const stone=mat('warm limestone','#938575'), pale=mat('aged plaster','#c0ae91'), dark=mat('timber','#49382b'), roof=mat('terracotta','#70483a'), roof2=mat('slate','#454b4d'), road=mat('cobblestone','#55534e'), water=mat('Danube','#263f48',.24,.25), iron=mat('forged iron','#343b3b',.42,.65), gold=mat('aged brass','#b18a4c',.3,.7), cloth=mat('traveller wool','#273d43'), skin=mat('skin','#b98968'), white=mat('linen','#d8cdb7'), red=mat('guard livery','#743b32'), green=mat('merchant green','#53634b'), leather=mat('dark leather','#30251f',.78), steel=mat('tempered steel','#9ba5a4',.24,.82), blue=mat('indigo cloth','#283c55');
  const ground=B.MeshBuilder.CreateGround('city ground',{width:230,height:230,subdivisions:2},scene);ground.position.y=-.15;ground.material=road;ground.checkCollisions=true;ground.receiveShadows=true;
- const river=B.MeshBuilder.CreateGround('Danube',{width:90,height:48},scene);river.position.set(0,-.11,73);river.material=water;
+ const river=B.MeshBuilder.CreateGround('Danube',{width:110,height:58,subdivisions:32},scene);river.position.set(0,-.11,77);river.material=water;river.isPickable=false;
  const box=(name,pos,scale,material,collide=true)=>{const m=B.MeshBuilder.CreateBox(name,{width:scale[0],height:scale[1],depth:scale[2]},scene);m.position.set(...pos);m.material=material;m.checkCollisions=collide;m.receiveShadows=true;return m;};
  const cyl=(name,pos,diam,height,material)=>{const m=B.MeshBuilder.CreateCylinder(name,{diameter:diam,height,tessellation:12},scene);m.position.set(...pos);m.material=material;m.checkCollisions=true;return m;};
  const roofPeak=(x,z,w,d,y,material)=>{const r=B.MeshBuilder.CreateCylinder('roof ridge',{diameterTop:0,diameterBottom:Math.max(w,d)*1.48,height:Math.max(w,d)*.62,tessellation:4},scene);r.rotation.y=Math.PI/4;r.scaling.x=w/Math.max(w,d);r.scaling.z=d/Math.max(w,d);r.position.set(x,y,z);r.material=material;r.checkCollisions=true;return r;};
@@ -61,7 +61,7 @@ try {
    // chimney
    box('chimney',[bx+w*.25,h+1.8,bz-d*.2],[1.1,3.1,1.1],stone);
  }
- // Broad market square, paving, fountain
+ // Broad market square, paving, fountain\n for(let i=0;i<130;i++){const x=-17+Math.random()*34,z=-14+Math.random()*28;const p=box('hand-laid market cobble',[x,.075,z],[.65+Math.random()*.55,.09,.42+Math.random()*.45],i%4===0?stone:road,false);p.rotation.y=Math.random()*Math.PI;}
  box('market paving',[0,.015,0],[37,.08,31],pale,false);
  cyl('market fountain base',[0,.5,2],4.4,1,stone);
  cyl('fountain basin',[0,1.05,2],3.4,.35,gold);
@@ -85,7 +85,7 @@ try {
  box('Pressburg castle',[ -48,18,40],[31,22,24],pale);
  for(const [x,z] of [[-63,29],[-33,29],[-63,51],[-33,51]]){box('castle tower',[x,25,z],[7,29,7],stone);roofPeak(x,z,8,8,42,roof2);}
  box('castle inner keep',[-48,32,40],[13,12,12],stone);
- // Docks and boats
+ // Docks and boats\n const crane=box('harbour crane post',[39,5,43],[.65,10,.65],dark);box('harbour crane arm',[39,9.8,43],[.6,.6,9],dark);box('crane counterweight',[39,8,39],[2,1.5,2],stone);cyl('crane pulley',[39,8.7,47],.8,.35,iron);for(let i=0;i<6;i++){box('cargo crate',[18+i*2.2,.8,39+(i%2)*2],[1.5,1.5,1.5],dark);}
  for(let i=0;i<4;i++){box('dock plank',[22+i*2,.1,47],[1.8,.35,18],dark,false);}
  const boat=box('merchant barge',[28,.15,58],[7,.65,16],dark,false);boat.rotation.y=.12;
  box('mast',[28,5,58],[.25,10,.25],dark,false);
@@ -94,32 +94,52 @@ try {
    if((x+z)%2===0){const px=x*17+7,pz=z*17+6;if(pz<43){cyl('lamp post',[px,2.3,pz],.16,4.6,iron);box('lantern',[px,4.5,pz],[.65,.75,.65],gold,false);}}
  }
  for(let i=0;i<12;i++){const x=-23+(i%6)*9,z=-17+Math.floor(i/6)*8;box('market stall canopy',[x,3,z],[5,.25,4],i%2?red:green,false);box('market stall table',[x,1.5,z],[4.6,.5,3.6],dark,false);}
- // Character factory with articulated simple rig
- function person(name,x,z,coat,scale=1){
+ // Character factory: layered late-medieval clothing, articulated limbs, face and arming sword
+ function person(name,x,z,coat,scale=1,role='civilian'){
    const root=new B.TransformNode(name,scene);root.position.set(x,0,z);
-   const part=(n,p,s,m)=>{const o=B.MeshBuilder.CreateBox(n,{width:s[0],height:s[1],depth:s[2]},scene);o.parent=root;o.position.set(...p);o.material=m;return o;};
-   const torso=part(name+' coat',[0,1.42,0],[.72,1.05,.4],coat);
-   const head=B.MeshBuilder.CreateSphere(name+' head',{diameter:.48,segments:12},scene);head.parent=root;head.position.y=2.25;head.material=skin;
-   const hat=part(name+' cap',[0,2.53,0],[.58,.16,.58],dark);
-   const armL=part(name+' arm L',[-.48,1.48,0],[.22,.86,.24],coat),armR=part(name+' arm R',[.48,1.48,0],[.22,.86,.24],coat);
+   const part=(n,p,s,m,parent=root)=>{const o=B.MeshBuilder.CreateBox(n,{width:s[0],height:s[1],depth:s[2]},scene);o.parent=parent;o.position.set(...p);o.material=m;return o;};
+   const sphere=(n,p,d,m)=>{const o=B.MeshBuilder.CreateSphere(n,{diameter:d,segments:16},scene);o.parent=root;o.position.set(...p);o.material=m;return o;};
+   const torso=part(name+' tailored doublet',[0,1.43,0],[.72,1.08,.43],coat);
+   const chest=part(name+' chest panel',[0,1.48,-.225],[.38,.78,.035],role==='guard'?red:leather);
+   part(name+' leather belt',[0,1.03,-.01],[.79,.13,.48],leather);
+   part(name+' brass buckle',[0,1.04,-.255],[.13,.14,.04],gold);
+   part(name+' shoulder mantle',[0,1.86,.18],[.83,.38,.2],role==='guard'?red:blue);
+   const neck=cyl(name+' neck',[0,2.04,0],.23,.28,skin);neck.parent=root;
+   sphere(name+' head',[0,2.35,0],.49,skin);
+   const hair=sphere(name+' hair cap',[0,2.52,.045],.51,dark);hair.scaling.y=.46;
+   sphere(name+' left eye',[-.105,2.38,-.226],.055,white);sphere(name+' right eye',[.105,2.38,-.226],.055,white);
+   sphere(name+' left pupil',[-.105,2.38,-.253],.025,iron);sphere(name+' right pupil',[.105,2.38,-.253],.025,iron);
+   part(name+' nose',[0,2.29,-.25],[.09,.15,.09],skin);
+   part(name+' wool cap',[0,2.61,0],[.59,.17,.59],role==='guard'?red:dark);
+   part(name+' cap brim',[0,2.55,-.08],[.72,.07,.68],leather);
+   const armL=part(name+' left sleeve',[-.48,1.49,0],[.25,.88,.28],coat),armR=part(name+' right sleeve',[.48,1.49,0],[.25,.88,.28],coat);
    armL.setPivotPoint(new B.Vector3(0,.36,0));armR.setPivotPoint(new B.Vector3(0,.36,0));
-   const legL=part(name+' leg L',[-.2,.52,0],[.27,1,.3],dark),legR=part(name+' leg R',[.2,.52,0],[.27,1,.3],dark);
+   part(name+' left glove',[-.48,1.02,0],[.24,.2,.25],leather);part(name+' right glove',[.48,1.02,0],[.24,.2,.25],leather);
+   const legL=part(name+' left breeches',[-.2,.52,0],[.29,1,.32],dark),legR=part(name+' right breeches',[.2,.52,0],[.29,1,.32],dark);
    legL.setPivotPoint(new B.Vector3(0,.42,0));legR.setPivotPoint(new B.Vector3(0,.42,0));
-   [torso,head,hat,armL,armR,legL,legR].forEach(m=>shadow.addShadowCaster(m));
-   return {root,armL,armR,legL,legR,phase:Math.random()*6.28,alive:true};
+   part(name+' left boot',[-.2,.13,-.055],[.34,.28,.48],leather);part(name+' right boot',[.2,.13,-.055],[.34,.28,.48],leather);
+   part(name+' sword scabbard',[.48,1.02,.18],[.12,.95,.15],leather).rotation.z=-.28;
+   const blade=part(name+' sword blade',[0,.49,-.035],[.095,.9,.035],steel,armR);
+   const point=B.MeshBuilder.CreateCylinder(name+' sword point',{diameterTop:0,diameterBottom:.095,height:.2,tessellation:4},scene);point.parent=armR;point.position.set(0,.98,-.035);point.material=steel;point.rotation.x=Math.PI/2;
+   part(name+' sword crossguard',[0,.05,-.035],[.42,.07,.1],gold,armR);
+   part(name+' sword grip',[0,-.13,-.035],[.09,.22,.1],leather,armR);
+   const pommel=sphere(name+' sword pommel',[0,-.26,-.035],.12,gold);pommel.parent=armR;pommel.position.set(0,-.26,-.035);
+   if(role==='guard'){part(name+' shoulder plate L',[-.47,1.88,0],[.37,.24,.42],iron);part(name+' shoulder plate R',[.47,1.88,0],[.37,.24,.42],iron);part(name+' chest crest',[0,1.68,-.25],[.19,.25,.04],gold);}
+   const parts=root.getChildMeshes();parts.forEach(m=>{m.scaling.scaleInPlace(scale);shadow.addShadowCaster(m);});
+   return {root,armL,armR,legL,legR,phase:Math.random()*6.28,alive:true,weapon:blade};
  }
- const player=person('Matej Varga',0,8,cloth,1);player.root.position.y=0;
+ const player=person('Matej Varga',0,8,blue,1,'hero');player.root.position.y=0;\n const hood=B.MeshBuilder.CreateSphere('Matej dark hood',{diameter:.62,segments:16},scene);hood.parent=player.root;hood.position.set(0,2.43,.12);hood.scaling.set(1,.9,.9);hood.material=leather;shadow.addShadowCaster(hood);\n const cloak=B.MeshBuilder.CreateBox('Matej travelling cloak',{width:.78,height:1.2,depth:.16},scene);cloak.parent=player.root;cloak.position.set(0,1.28,.29);cloak.material=blue;cloak.rotation.x=-.08;shadow.addShadowCaster(cloak);
  // Collision capsule proxy; visible rig follows proxy
  const collider=B.MeshBuilder.CreateCapsule('player collision',{height:2.2,radius:.42},scene);
  collider.isVisible=false;collider.checkCollisions=true;collider.ellipsoid=new B.Vector3(.48,1.05,.48);collider.ellipsoidOffset=new B.Vector3(0,1.05,0);collider.position.set(0,0,8);
- const anna=person('Anna',-10,-4,green);const guards=[person('Guard A',10,-18,red),person('Guard B',-20,14,red),person('Guard C',26,25,red)];
- const civilians=[person('Merchant',8,7,white),person('Citizen',-13,8,green),person('Dockworker',20,39,white),person('Citizen 2',-4,-14,white)];
+ const anna=person('Anna',-10,-4,green,1,'civilian');const guards=[person('Guard A',10,-18,red,1,'guard'),person('Guard B',-20,14,red,1,'guard'),person('Guard C',26,25,red,1,'guard')];
+ const civilians=[person('Merchant',8,7,white,1,'civilian'),person('Citizen',-13,8,green,1,'civilian'),person('Dockworker',20,39,white,1,'civilian'),person('Citizen 2',-4,-14,white,1,'civilian')];
  const allNPC=[anna,...guards,...civilians];
  // Props receive and cast shadows
  shadow.addShadowCaster(collider);ground.receiveShadows=true;
  // UI / state
  let started=false,paused=false,hp=100,alert=0,objective=0,dialogueUntil=0,attackUntil=0,jumpVelocity=0,onGround=true,stealth=false,sprinting=false;
- let yaw=Math.PI, pitch=.12,moveX=0,moveY=0,lookX=0,lookY=0,lastTime=performance.now(),toastUntil=0;
+ let yaw=Math.PI, pitch=.12,moveX=0,moveY=0,lookX=0,lookY=0,lastTime=performance.now(),toastUntil=0,combo=0,lastAttack=0,cameraDistance=7.4;
  const toast=t=>{$('toast').textContent=t;toastUntil=performance.now()+2600;};
  const updateUI=()=>{$('hp').style.width=hp+'%';$('alert').textContent='POZORNOSŤ STRÁŽÍ: '+(alert>70?'VYSOKÁ':alert>25?'ZVÝŠENÁ':'NÍZKA');$('objective').textContent=['Nájdi Annu pri rybnom trhu.','Získaj od Anny zapečatený list.','Dostaň sa k mestskému archívu.','Strias prenasledovateľov a unikni.'][objective]||'Kapitola dokončená';};
  updateUI();
@@ -128,21 +148,21 @@ try {
  window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyC')stealth=false;if(e.code==='ShiftLeft'||e.code==='ShiftRight')sprinting=false;});
  canvas.addEventListener('click',()=>{if(started&&!paused&&document.pointerLockElement!==canvas&&matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.();});
  document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas&&started&&!paused){yaw+=e.movementX*.0024;pitch=B.Scalar.Clamp(pitch+e.movementY*.0018,-.22,.62);}});
- let joyPointer=null,lookPointer=null,joyOrigin=null,lastLook=null;
+ let joyPointer=null,lookPointer=null,joyOrigin=null,lastLook=null;const lookSensitivity=.0062;
  const stick=$('stick'),nub=$('nub'),stickZone=$('stickZone'),lookZone=$('lookZone');
  stickZone.addEventListener('pointerdown',e=>{if(!started||paused)return;joyPointer=e.pointerId;stickZone.setPointerCapture(e.pointerId);const r=stick.getBoundingClientRect();joyOrigin={x:r.left+r.width/2,y:r.top+r.height/2};moveJoy(e);});
  function moveJoy(e){if(e.pointerId!==joyPointer||!joyOrigin)return;const dx=e.clientX-joyOrigin.x,dy=e.clientY-joyOrigin.y,len=Math.hypot(dx,dy),max=37,k=len>max?max/len:1;moveX=dx/max;moveY=-dy/max;nub.style.transform='translate('+dx*k+'px,'+dy*k+'px)';}
  stickZone.addEventListener('pointermove',moveJoy);const endJoy=e=>{if(e.pointerId===joyPointer){joyPointer=null;moveX=moveY=0;nub.style.transform='';}};stickZone.addEventListener('pointerup',endJoy);stickZone.addEventListener('pointercancel',endJoy);
  lookZone.addEventListener('pointerdown',e=>{if(!started||paused)return;lookPointer=e.pointerId;lastLook={x:e.clientX,y:e.clientY};lookZone.setPointerCapture(e.pointerId);});
- lookZone.addEventListener('pointermove',e=>{if(e.pointerId!==lookPointer||!lastLook)return;const dx=e.clientX-lastLook.x,dy=e.clientY-lastLook.y;yaw+=dx*.008;pitch=B.Scalar.Clamp(pitch+dy*.004,-.22,.62);lastLook={x:e.clientX,y:e.clientY};});
+ lookZone.addEventListener('pointermove',e=>{if(e.pointerId!==lookPointer||!lastLook)return;const dx=e.clientX-lastLook.x,dy=e.clientY-lastLook.y;yaw+=dx*lookSensitivity;pitch=B.Scalar.Clamp(pitch+dy*.0032,-.18,.58);lastLook={x:e.clientX,y:e.clientY};});
  const endLook=e=>{if(e.pointerId===lookPointer){lookPointer=null;lastLook=null;}};lookZone.addEventListener('pointerup',endLook);lookZone.addEventListener('pointercancel',endLook);
- function bindAction(id,fn){const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();if(started&&!paused)fn();});}
+ function bindAction(id,fn){const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(started&&!paused)fn();});}
  function jump(){if(onGround){jumpVelocity=7.3;onGround=false;}}
- function attack(){if(performance.now()<attackUntil)return;attackUntil=performance.now()+560;player.armR.rotation.x=-1.6;setTimeout(()=>player.armR.rotation.x=0,180);let hit=false;for(const g of guards){if(g.alive&&B.Vector3.Distance(player.root.position,g.root.position)<3.2){g.alive=false;g.root.setEnabled(false);hit=true;}}if(hit){toast('Strážnik zneškodnený.');if(objective===3)alert=Math.max(0,alert-25);}else toast('Útok minul cieľ.');}
+ function attack(){const now=performance.now();if(now<attackUntil)return;combo=now-lastAttack<850?(combo%3)+1:1;lastAttack=now;attackUntil=now+420;player.armR.rotation.x=-1.1-combo*.18;player.armR.rotation.z=combo===2?-.65:.35;setTimeout(()=>{player.armR.rotation.x=0;player.armR.rotation.z=0;},230);let target=null,best=3.7;for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(player.root.position,g.root.position);if(dist<best){const to=g.root.position.subtract(player.root.position);const facing=new B.Vector3(Math.sin(player.root.rotation.y),0,Math.cos(player.root.rotation.y));if(B.Vector3.Dot(to.normalize(),facing)>.05){target=g;best=dist;}}}if(target){target.alive=false;target.root.setEnabled(false);toast(['','Zásah mečom.','Druhý úder komba.','Dokončovací úder.'][combo]);if(objective===3)alert=Math.max(0,alert-25);}else toast('Meč zasvišťal naprázdno.');}
  function interact(){if(B.Vector3.Distance(player.root.position,anna.root.position)<4){if(objective===0){objective=1;toast('Anna: „List je ukrytý. Vezmi si ho.“');}else if(objective===1){objective=2;toast('Získal si zapečatený list. Zamier k archívu.');}else toast('Anna: „Ponáhľaj sa, stráže sú blízko.“');updateUI();return;}if(objective===2&&B.Vector3.Distance(player.root.position,new B.Vector3(0,0,-35))<12){objective=3;toast('Archív je otvorený. Stráže ťa spozorovali!');alert=65;updateUI();return;}toast('V blízkosti nie je nič na preskúmanie.');}
  function climb(){if(!onGround){jumpVelocity=5.8;toast('Výstup');}else{jumpVelocity=5.8;onGround=false;}}
  function dodge(){const dir=new B.Vector3(Math.sin(yaw),0,Math.cos(yaw));collider.moveWithCollisions(dir.scale(-3.8));}
- bindAction('jump',jump);bindAction('attack',attack);bindAction('interact',interact);bindAction('climb',climb);bindAction('dodge',dodge);bindAction('stealth',()=>{stealth=!stealth;toast(stealth?'Plíženie aktivované':'Plíženie vypnuté');});
+ bindAction('jump',jump);bindAction('attack',attack);bindAction('interact',interact);bindAction('climb',climb);bindAction('dodge',dodge);bindAction('stealth',()=>{stealth=!stealth;toast(stealth?'Plíženie aktivované':'Plíženie vypnuté');});\n const sprintButton=$('sprint');if(sprintButton){sprintButton.addEventListener('pointerdown',e=>{e.preventDefault();sprinting=true;sprintButton.setPointerCapture(e.pointerId);});const stopSprint=()=>sprinting=false;sprintButton.addEventListener('pointerup',stopSprint);sprintButton.addEventListener('pointercancel',stopSprint);sprintButton.addEventListener('lostpointercapture',stopSprint);}
  $('pause').addEventListener('click',pauseGame);$('resume').addEventListener('click',()=>{paused=false;$('pauseScreen').style.display='none';$('pause').style.display='block';lastTime=performance.now();});
  function pauseGame(){if(!started)return;paused=true;$('pauseScreen').style.display='flex';$('pause').style.display='none';if(document.pointerLockElement)document.exitPointerLock();}
  start.addEventListener('click',()=>{if(start.disabled)return;started=true;overlay.style.display='none';$('pause').style.display='block';toast('Prešporok, rok 1567. Nájdite Annu.');if(matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.();});
@@ -154,9 +174,9 @@ try {
    const gp=navigator.getGamepads?.()[0];let ix=moveX,iy=moveY;
    if(keys.KeyW||keys.ArrowUp)iy+=1;if(keys.KeyS||keys.ArrowDown)iy-=1;if(keys.KeyA||keys.ArrowLeft)ix-=1;if(keys.KeyD||keys.ArrowRight)ix+=1;
    if(gp){ix+=gp.axes[0]||0;iy-=gp.axes[1]||0;if(gp.buttons[0]?.pressed)jump();}
-   if(keys.Space)jump();if(keys.KeyE){interact();keys.KeyE=false;}if(keys.KeyF){attack();keys.KeyF=false;}if(keys.KeyQ){climb();keys.KeyQ=false;}if(keys.KeyX){dodge();keys.KeyX=false;}
+   if(keys.Space&&!keys._space){jump();keys._space=true;}if(!keys.Space)keys._space=false;if(keys.KeyE){interact();keys.KeyE=false;}if(keys.KeyF){attack();keys.KeyF=false;}if(keys.KeyQ){climb();keys.KeyQ=false;}if(keys.KeyX){dodge();keys.KeyX=false;}
    const mag=Math.hypot(ix,iy);if(mag>1){ix/=mag;iy/=mag;}
-   const speed=stealth?2.0:(sprinting||keys.ShiftLeft||keys.ShiftRight?7.1:4.25);
+   const speed=stealth?1.65:(sprinting||keys.ShiftLeft||keys.ShiftRight?7.8:4.5);
    const forward=new B.Vector3(Math.sin(yaw),0,Math.cos(yaw)),right=new B.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
    const delta=forward.scale(iy*speed*dt).add(right.scale(ix*speed*dt));
    if(mag>.08){collider.moveWithCollisions(delta);player.root.rotation.y=Math.atan2(delta.x,delta.z);player.phase+=dt*(sprinting?13:8);player.legL.rotation.x=Math.sin(player.phase)*.65;player.legR.rotation.x=-Math.sin(player.phase)*.65;player.armL.rotation.x=-Math.sin(player.phase)*.45;player.armR.rotation.x=Math.sin(player.phase)*.45;}else{player.legL.rotation.x*=.8;player.legR.rotation.x*=.8;player.armL.rotation.x*=.8;player.armR.rotation.x*=.8;}
@@ -166,15 +186,15 @@ try {
    for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(g.root.position,player.root.position);if(dist<17&&(!stealth||dist<6)){alert=Math.min(100,alert+dt*(dist<7?28:9));const d=player.root.position.subtract(g.root.position);d.y=0;d.normalize();g.root.position.addInPlace(d.scale(dt*(dist<4?1.8:2.7)));g.root.rotation.y=Math.atan2(d.x,d.z);if(dist<1.8&&t%900<dt*1000){hp=Math.max(0,hp-7);$('hp').style.width=hp+'%';}}else{g.root.position.x+=Math.sin(t*.0003+g.phase)*dt*.25;}}
    if(alert>0)alert=Math.max(0,alert-dt*(stealth?8:2.4));updateUI();
    // Camera behind character; pitch controls elevation
-   const distance=7.8, elev=2.8+pitch*5;
+   const distance=cameraDistance, elev=2.65+pitch*5.4;
    const desired=player.root.position.add(new B.Vector3(-Math.sin(yaw)*distance,elev,-Math.cos(yaw)*distance));
    camera.position=B.Vector3.Lerp(camera.position,desired,1-Math.pow(.0008,dt));
-   camera.setTarget(player.root.position.add(new B.Vector3(0,1.65,0)));
+   camera.setTarget(player.root.position.add(new B.Vector3(0,1.58,0)));\n   const camOrigin=player.root.position.add(new B.Vector3(0,1.5,0));const camDir=camera.position.subtract(camOrigin).normalize();const camRay=new B.Ray(camOrigin,camDir,cameraDistance+1);const camHit=scene.pickWithRay(camRay,m=>m.checkCollisions&&m!==collider&&!m.name.includes('player'));if(camHit&&camHit.hit&&camHit.distance<cameraDistance)camera.position=B.Vector3.Lerp(camera.position,camOrigin.add(camDir.scale(Math.max(1.8,camHit.distance-.45))),.35);
    if(performance.now()>toastUntil)$('toast').textContent='';
    if(hp<=0){hp=100;alert=0;collider.position.set(0,0,8);toast('Matej sa vrátil na bezpečné miesto.');}
  }
  scene.onBeforeRenderObservable.add(()=>{const now=performance.now(),dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;update(dt,now);});
- // Environment polish: sky gradient, sun disc, subtle particles
+ // Environment polish: sky gradient, sun disc, subtle particles\n const dust=new B.ParticleSystem('golden dust',420,scene);dust.particleTexture=new B.Texture('https://assets.babylonjs.com/textures/flare.png',scene);dust.emitter=new B.Vector3(0,3,0);dust.minEmitBox=new B.Vector3(-65,0,-55);dust.maxEmitBox=new B.Vector3(65,22,55);dust.color1=new B.Color4(.78,.65,.43,.23);dust.color2=new B.Color4(.55,.62,.63,.12);dust.minSize=.025;dust.maxSize=.08;dust.minLifeTime=5;dust.maxLifeTime=12;dust.emitRate=26;dust.gravity=new B.Vector3(0,.025,0);dust.start();\n for(let i=0;i<8;i++){const x=-28+i*8,z=-24;const flame=B.MeshBuilder.CreateSphere('torch glow',{diameter:.42,segments:8},scene);flame.position.set(x,3.7,z);const fm=new B.StandardMaterial('torch glow mat '+i,scene);fm.emissiveColor=new B.Color3(1,.42,.12);fm.disableLighting=true;flame.material=fm;const light=new B.PointLight('torch light '+i,new B.Vector3(x,3.7,z),scene);light.diffuse=new B.Color3(1,.48,.19);light.intensity=.55;light.range=11;}
  const sky=B.MeshBuilder.CreateSphere('sky dome',{diameter:420,segments:24},scene);sky.isPickable=false;sky.infiniteDistance=true;sky.material=new B.StandardMaterial('sky material',scene);sky.material.backFaceCulling=false;sky.material.disableLighting=true;sky.material.emissiveColor=new B.Color3(.18,.25,.29);sky.material.alpha=.18;
  // Add shadows to all static architecture
  scene.meshes.forEach(m=>{if(m.checkCollisions&&m!==ground&&m!==collider)shadow.addShadowCaster(m);});
