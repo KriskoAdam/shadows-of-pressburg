@@ -297,7 +297,7 @@ try {
    const speed=stealth?1.65:(sprinting||keys.ShiftLeft||keys.ShiftRight?7.8:4.5);
    const forward=new B.Vector3(Math.sin(yaw),0,Math.cos(yaw)),right=new B.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
    const delta=forward.scale(iy*speed*dt).add(right.scale(ix*speed*dt));
-   if(mag>.08){collider.moveWithCollisions(delta);player.root.rotation.y=Math.atan2(delta.x,delta.z);player.phase+=dt*(sprinting?13:8);player.legL.rotation.x=Math.sin(player.phase)*.65;player.legR.rotation.x=-Math.sin(player.phase)*.65;player.armL.rotation.x=-Math.sin(player.phase)*.45;player.armR.rotation.x=Math.sin(player.phase)*.45;}else{player.legL.rotation.x*=.8;player.legR.rotation.x*=.8;player.armL.rotation.x*=.8;player.armR.rotation.x*=.8;}
+   if(mag>.08){collider.moveWithCollisions(delta);player.root.rotation.y=Math.atan2(delta.x,delta.z)+Math.PI;player.phase+=dt*(sprinting?13:8);player.legL.rotation.x=Math.sin(player.phase)*.65;player.legR.rotation.x=-Math.sin(player.phase)*.65;player.armL.rotation.x=-Math.sin(player.phase)*.45;player.armR.rotation.x=Math.sin(player.phase)*.45;}else{player.legL.rotation.x*=.8;player.legR.rotation.x*=.8;player.armL.rotation.x*=.8;player.armR.rotation.x*=.8;}
    jumpVelocity-=18*dt;collider.moveWithCollisions(new B.Vector3(0,jumpVelocity*dt,0));if(collider.position.y<=0){collider.position.y=0;jumpVelocity=0;onGround=true;}else onGround=false;
    player.root.position.copyFrom(collider.position);player.root.position.y=collider.position.y;
    // Guards investigate and pursue when visible / noisy
