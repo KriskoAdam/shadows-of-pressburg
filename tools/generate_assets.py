@@ -11,7 +11,7 @@ def sphere(r,p,c):
  m=trimesh.creation.icosphere(subdivisions=2,radius=r);m.apply_translation(p);return paint(m,C[c])
 def export(name,parts):
  mesh=trimesh.util.concatenate(parts)
- mesh.merge_vertices(); mesh.remove_unreferenced_vertices(); mesh.fix_normals()
+ mesh.merge_vertices(); mesh.remove_unreferenced_vertices()
  s=trimesh.Scene(); s.add_geometry(mesh,node_name=name,geom_name=name)
  s.export(os.path.join(OUT,name+".glb"))
 # Pressburg half-timber merchant house, dimensions approx 10x11x9m
