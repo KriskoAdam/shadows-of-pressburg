@@ -42,7 +42,7 @@
 </head>
 <body>
 <canvas id="renderCanvas" aria-label="3D game world"></canvas>
-<div id="overlay"><div class="panel"><div class="kicker">HISTORICKÁ AKČNÁ ADVENTÚRA · 1567</div><h1>SHADOWS<br><em>OF PRESSBURG</em></h1><p class="lead">Prešporok. Mesto korunovácií, obchodu a tajných dohôd. Keď sa v prístave objaví list s pečaťou mestskej rady, kuriér Matej Varga sa ocitne v sprisahaní, ktoré môže zmeniť mocenskú rovnováhu na Dunaji.</p><button class="primary" id="start" disabled>NAČÍTAVAM HRU…</button><div id="loadStatus">Inicializujem 3D engine…</div><div id="errorBox"></div><div class="notes">PC: WASD pohyb · myš kamera · Space skok · E interakcia · F útok · Shift beh · C plíženie · Q výstup · X úhyb · Esc pauza.<br>Mobil: ľavý joystick pohyb · potiahnutím pravej strany otáčaš kameru · tlačidlá akcií vpravo.</div></div></div>
+<div id="overlay"><div class="panel"><div class="kicker">HISTORICKÁ AKČNÁ ADVENTÚRA · 1567</div><h1>SHADOWS<br><em>OF PRESSBURG</em></h1><p class="lead">Prešporok. Mesto korunovácií, obchodu a tajných dohôd. Keď sa v prístave objaví list s pečaťou mestskej rady, kuriér Matej Varga sa ocitne v sprisahaní, ktoré môže zmeniť mocenskú rovnováhu na Dunaji.</p><button class="primary" id="start" disabled>NAČÍTAVAM HRU…</button><div id="loadStatus">Inicializujem 3D engine…</div><div id="errorBox"></div><div class="notes">PC: WASD pohyb · myš kamera · Space skok · E interakcia · F útok · Shift beh · C plíženie · Q výstup · X úhyb · Esc pauza.<br>Mobil: ľavý joystick pohyb · pravá strana kamera · podrž BEH pre šprint · meč, skok, úhyb a interakcia vpravo.</div></div></div>
 <div id="pauseScreen"><div class="panel"><div class="kicker">PRESTÁVKA</div><h1 style="font-size:38px">Hra pozastavená</h1><p class="lead">Tvoj postup v tejto kapitole zostáva zachovaný.</p><button class="primary" id="resume">POKRAČOVAŤ</button></div></div>
 <button id="pause" aria-label="Pozastaviť hru">Ⅱ</button>
 <div id="ui">
@@ -51,7 +51,7 @@
 <div id="stats">ZDRAVIE<div id="health"><i id="hp"></i></div><div id="alert">POZORNOSŤ STRÁŽÍ: NÍZKA</div></div>
 <div id="prompt"></div><div id="toast"></div><div id="dialogue"></div>
 <div id="mobile"><div id="stickZone"><div id="stick"><div id="nub"></div></div></div><div id="lookZone"></div><div id="actions">
-<button class="act" id="jump"><strong>↟</strong>SKOK</button><button class="act" id="climb"><strong>⇧</strong>VÝSTUP</button><button class="act" id="attack"><strong>⚔</strong>ÚTOK</button><button class="act" id="stealth"><strong>◒</strong>PLÍŽENIE</button><button class="act" id="interact"><strong>◎</strong>AKCIA</button><button class="act" id="dodge"><strong>↗</strong>ÚHYB</button>
+<button class="act" id="jump"><strong>↟</strong>SKOK</button><button class="act" id="climb"><strong>⇧</strong>VÝSTUP</button><button class="act" id="attack"><strong>⚔</strong>ÚTOK</button><button class="act" id="stealth"><strong>◒</strong>PLÍŽENIE</button><button class="act" id="sprint"><strong>»</strong>BEH</button><button class="act" id="interact"><strong>◎</strong>AKCIA</button><button class="act" id="dodge"><strong>↗</strong>ÚHYB</button>
 </div><div id="hint">PRAVOU STRANOU OBRAZU OTÁČAJ KAMERU</div></div>
 </div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
