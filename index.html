@@ -35,6 +35,15 @@
 .lead{font:13px/1.7 system-ui;color:#c9c2b7;max-width:490px}.primary{margin-top:22px;padding:15px 24px;border:1px solid #f1d7a3;background:linear-gradient(135deg,#e3c68f,#b48d54);color:#17212a;font:800 11px system-ui;letter-spacing:2px;min-width:210px;cursor:pointer;box-shadow:0 7px 24px #0005}
 .primary:disabled{opacity:.55;cursor:wait}.notes{font:10px/1.7 system-ui;color:#aab0ae;margin-top:17px}#loadStatus{margin-top:12px;min-height:18px;font:11px/1.5 system-ui;color:#d8c59f}
 #errorBox{display:none;margin-top:10px;padding:10px;border:1px solid #a85a4a88;background:#351d1b;color:#f0c5b8;font:11px/1.5 system-ui}
+#loadingScreen{position:fixed;z-index:10;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 42%,#263a40 0%,#101a20 48%,#070c11 100%);color:var(--paper)}
+.loadPanel{width:min(440px,100%);text-align:center;padding:36px 28px;border:1px solid #d8b77c66;background:#0b1319d9;box-shadow:0 24px 90px #000b}
+.loadSigil{width:58px;height:58px;border:1px solid var(--gold);border-radius:50%;margin:0 auto 22px;display:grid;place-items:center;color:var(--gold);font:26px Georgia;box-shadow:0 0 32px #d8b77c22}
+.loadTitle{font:10px system-ui;letter-spacing:4px;color:var(--gold)}.loadName{font:30px Georgia;margin:12px 0 24px}
+.loadTrack{height:3px;background:#3a3c39;overflow:hidden;margin:18px 0 12px}.loadTrack i{display:block;width:0;height:100%;background:linear-gradient(90deg,#9e7744,#f0d39a);transition:width .2s}
+#loadPercent{font:10px system-ui;letter-spacing:2px;color:var(--gold)}#loadMessage{font:11px system-ui;color:#c7c0b2;margin-top:12px;min-height:18px}
+#mapFrame{position:absolute;left:18px;top:150px;width:126px;height:126px;border:1px solid #d8b77c88;background:#0a1218d9;box-shadow:0 8px 25px #0008;padding:5px;backdrop-filter:blur(8px)}
+#miniMap{width:100%;height:100%;display:block}#mapLabel{position:absolute;left:6px;top:5px;font:7px system-ui;letter-spacing:1.5px;color:#e4c58e;text-shadow:0 1px 3px #000}
+@media(max-width:600px){#mapFrame{left:10px;top:154px;width:94px;height:94px;padding:4px}#mapLabel{font-size:6px}}
 @media(pointer:fine){#mobile{display:none}#hint{display:none}#pause{right:22px}}
 @media(pointer:coarse){#mobile{display:block}}
 @media(max-width:600px){.panel{padding:26px 22px}.lead{font-size:12px}#mission{right:10px;top:calc(env(safe-area-inset-top) + 10px);width:min(205px,51vw);padding:9px 10px;font-size:10px}#brand{left:11px;top:calc(env(safe-area-inset-top) + 10px);font-size:7px;letter-spacing:1.5px;max-width:42vw}#stats{left:12px;top:88px}#health{width:105px}#stick{width:126px;height:126px;left:13px;bottom:calc(env(safe-area-inset-bottom) + 18px)}#nub{left:41px;top:41px}#actions{right:9px;bottom:calc(env(safe-area-inset-bottom) + 14px);grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:5px}.act{width:56px;height:56px}#hint{font-size:7px;bottom:calc(env(safe-area-inset-bottom) + 5px)}#pause{right:10px;top:calc(env(safe-area-inset-top) + 75px)}}
@@ -43,17 +52,18 @@
 <body>
 <canvas id="renderCanvas" aria-label="3D game world"></canvas>
 <div id="overlay"><div class="panel"><div class="kicker">HISTORICKÁ AKČNÁ ADVENTÚRA · 1567</div><h1>SHADOWS<br><em>OF PRESSBURG</em></h1><p class="lead">Prešporok. Mesto korunovácií, obchodu a tajných dohôd. Keď sa v prístave objaví list s pečaťou mestskej rady, kuriér Matej Varga sa ocitne v sprisahaní, ktoré môže zmeniť mocenskú rovnováhu na Dunaji.</p><button class="primary" id="start" disabled>NAČÍTAVAM HRU…</button><div id="loadStatus">Inicializujem 3D engine…</div><div id="errorBox"></div><div class="notes">PC: WASD pohyb · myš kamera · Space skok · E interakcia · F útok · Shift beh · C plíženie · Q výstup · X úhyb · Esc pauza.<br>Mobil: ľavý analógový joystick · pravá strana kamera · rozloženie akčných tlačidiel A/B/X/Y.</div></div></div>
+<div id="loadingScreen"><div class="loadPanel"><div class="loadSigil">✦</div><div class="loadTitle">PRÍPRAVA MISIE · 1567</div><div class="loadName">Prešporok sa prebúdza</div><div class="loadTrack"><i id="loadBar"></i></div><div id="loadPercent">0 %</div><div id="loadMessage">Synchronizujem herný svet…</div></div></div>
 <div id="pauseScreen"><div class="panel"><div class="kicker">PRESTÁVKA</div><h1 style="font-size:38px">Hra pozastavená</h1><p class="lead">Tvoj postup v tejto kapitole zostáva zachovaný.</p><button class="primary" id="resume">POKRAČOVAŤ</button></div></div>
 <button id="pause" aria-label="Pozastaviť hru">Ⅱ</button>
 <div id="ui">
 <div id="brand">SHADOWS OF PRESSBURG<br><span style="font-weight:400;letter-spacing:1px;color:#c6bba7">KAPITOLA I — PEČAŤ NA DUNAJI</span></div>
 <div id="mission"><b>AKTUÁLNA ÚLOHA</b><span id="objective">Nájdi Annu pri rybnom trhu.</span></div>
 <div id="stats">ZDRAVIE<div id="health"><i id="hp"></i></div><div id="alert">POZORNOSŤ STRÁŽÍ: NÍZKA</div></div>
-<div id="prompt"></div><div id="toast"></div><div id="dialogue"></div>
+<div id="prompt"></div><div id="toast"></div><div id="dialogue"></div><div id="mapFrame"><canvas id="miniMap" width="220" height="220"></canvas><div id="mapLabel">PREŠPOROK · MAPA</div></div>
 <div id="mobile"><div id="stickZone"><div id="stick"><div id="nub"></div></div></div><div id="lookZone"></div><div id="actions">
 <button class="act" id="jump" style="grid-column:2;grid-row:1"><strong>A</strong>SKOK</button><button class="act" id="attack" style="grid-column:3;grid-row:2"><strong>X</strong>ÚTOK</button><button class="act" id="interact" style="grid-column:2;grid-row:3"><strong>Y</strong>AKCIA</button><button class="act" id="dodge" style="grid-column:1;grid-row:2"><strong>B</strong>ÚHYB</button><button class="act" id="climb" style="grid-column:1;grid-row:1"><strong>⇧</strong>VÝSTUP</button><button class="act" id="stealth" style="grid-column:3;grid-row:1"><strong>◒</strong>PLÍŽENIE</button><button class="act" id="sprint" style="grid-column:3;grid-row:3"><strong>»</strong>BEH</button>
 </div><div id="hint">PRAVOU STRANOU OBRAZU OTÁČAJ KAMERU</div></div>
 </div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
-<script src="./src/game.js?v=3"></script>
+<script src="./src/game.js?v=4"></script>
 </body></html>
