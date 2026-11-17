@@ -15,14 +15,14 @@ function boot(){
 try {
  const B=window.BABYLON;
  const engine=new B.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,adaptToDeviceRatio:true});
- engine.setHardwareScalingLevel(matchMedia('(pointer:coarse)').matches?Math.max(1,Math.min(1.5,(window.devicePixelRatio||1)/1.35)):Math.min(1.15,1/Math.min(window.devicePixelRatio||1,1.15)));
+ engine.setHardwareScalingLevel(1/(window.devicePixelRatio||1));
  const scene=new B.Scene(engine);
  scene.clearColor=new B.Color4(.48,.56,.59,1);
  scene.collisionsEnabled=true;
  scene.gravity=new B.Vector3(0,-18,0);
  scene.fogMode=B.Scene.FOGMODE_EXP2; scene.fogDensity=.0019;
  scene.fogColor=new B.Color3(.42,.43,.40);
- const camera=new B.FreeCamera('followCamera',new B.Vector3(0,5,-9),scene);
+ const camera=new B.FreeCamera('followCamera',new B.Vector3(0,5,9),scene);
  camera.minZ=.2; camera.maxZ=450; camera.fov=.74; camera.inputs.clear();
  const cinematic=new B.DefaultRenderingPipeline('pressburgCinematic',true,scene,[camera]);
  cinematic.fxaaEnabled=true;cinematic.samples=1;
@@ -65,7 +65,15 @@ try {
    m.albedoTexture=texture(n,b,k);m.albedoColor=B.Color3.White();
  }
 
- const ground=B.MeshBuilder.CreateGround('city ground',{width:230,height:230,subdivisions:2},scene);ground.position.y=-.15;ground.material=road;ground.checkCollisions=true;ground.receiveShadows=true;
+ const terrain=mat('natural compacted earth and fine cobbles','#817a6b');
+ terrain.albedoTexture=texture('fine terrain paving','#817a6b','cobble');
+ terrain.albedoTexture.uScale=terrain.albedoTexture.vScale=72;
+ terrain.albedoColor=B.Color3.White();
+ const marketPaving=mat('market square fitted stone','#a89b83');
+ marketPaving.albedoTexture=texture('small market setts','#a89b83','cobble');
+ marketPaving.albedoTexture.uScale=marketPaving.albedoTexture.vScale=18;
+ marketPaving.albedoColor=B.Color3.White();
+ const ground=B.MeshBuilder.CreateGround('city ground',{width:230,height:230,subdivisions:2},scene);ground.position.y=-.15;ground.material=terrain;ground.checkCollisions=true;ground.receiveShadows=true;
  // Start rendering as soon as the base scene exists; later construction errors must not leave a blank canvas.
  let renderFault=null; engine.runRenderLoop(()=>{try{scene.render();}catch(e){renderFault=e;const eb=$('errorBox');if(eb){eb.style.display='block';eb.textContent='Chyba vykresľovania: '+e.message;}}});
  const river=B.MeshBuilder.CreateGround('Danube',{width:110,height:58,subdivisions:32},scene);river.position.set(0,-.11,77);river.material=water;river.isPickable=false;
@@ -87,7 +95,7 @@ try {
    const root=new B.TransformNode(name+" root",scene);root.position.copyFrom(position);root.scaling.copyFrom(scale);
    for(const src of asset.meshes.filter(m=>m.geometry)){
      const clone=src.clone(name+" "+src.name,root,true);
-     clone.setEnabled(true);clone.isVisible=true;clone.checkCollisions=true;clone.receiveShadows=true;
+     clone.setEnabled(true);clone.isVisible=true;clone.checkCollisions=false;clone.receiveShadows=true;
      if(!matchMedia('(pointer:coarse)').matches)shadow.addShadowCaster(clone);
    }
    return root;
@@ -97,7 +105,11 @@ try {
  ]).then(([houses,stalls,trees,barrels,carts])=>{
    houses.meshes.forEach(m=>m.setEnabled(false));stalls.meshes.forEach(m=>m.setEnabled(false));
    trees.meshes.forEach(m=>m.setEnabled(false));barrels.meshes.forEach(m=>m.setEnabled(false));carts.meshes.forEach(m=>m.setEnabled(false));
-   housePlacements.forEach((p,n)=>cloneAsset(houses,new B.Vector3(p.x,0,p.z),new B.Vector3(p.sx,p.sy,p.sz),"Pressburg house "+n));
+   housePlacements.forEach((p,n)=>{
+     cloneAsset(houses,new B.Vector3(p.x,0,p.z),new B.Vector3(p.sx,p.sy,p.sz),"Pressburg house "+n);
+     const hit=B.MeshBuilder.CreateBox("house collision "+n,{width:9.7*p.sx,height:7.4*p.sy,depth:8.5*p.sz},scene);
+     hit.position.set(p.x,3.7*p.sy,p.z);hit.isVisible=false;hit.checkCollisions=true;hit.isPickable=false;
+   });
    for(const [x,z,rot] of [[-12,-5,0],[12,-5,Math.PI],[ -13,8,.2],[13,8,-.2]])
      {const o=cloneAsset(stalls,new B.Vector3(x,0,z),new B.Vector3(1,1,1),"Market stall");o.rotation.y=rot;}
    for(const [x,z,s] of [[-69,-12,1.2],[-64,17,1.1],[62,-22,1.2],[68,18,1.15],[48,62,1.2],[-27,58,1.25]])
@@ -119,8 +131,7 @@ try {
  for(let z=-58;z<=42;z+=8){box('west city curtain wall',[-82,5,z],[2.6,10,7.8],stone);box('east city curtain wall',[82,5,z],[2.6,10,7.8],stone);}
  for(const [x,z] of [[-82,-63],[82,-63],[-82,42],[82,42]]){cyl('round defensive bastion',[x,8,z],10,16,stone);roofPeak(x,z,10,10,17,roof2);}
  // Broad market square, paving, fountain
- for(let i=0;i<130;i++){const x=-17+Math.random()*34,z=-14+Math.random()*28;const p=box('hand-laid market cobble',[x,.075,z],[.65+Math.random()*.55,.09,.42+Math.random()*.45],i%4===0?stone:road,false);p.rotation.y=Math.random()*Math.PI;}
- box('market paving',[0,.015,0],[37,.08,31],pale,false);
+ const marketFloor=box('continuous market square paving',[0,.015,0],[37,.08,31],marketPaving,false);marketFloor.checkCollisions=false;
  cyl('market fountain base',[0,.5,2],4.4,1,stone);
  cyl('fountain basin',[0,1.05,2],3.4,.35,gold);
  cyl('fountain column',[0,2,2],.65,1.8,stone);
@@ -148,27 +159,12 @@ try {
  for(let i=0;i<4;i++){box('dock plank',[22+i*2,.1,47],[1.8,.35,18],dark,false);}
  const boat=box('merchant barge',[28,.15,58],[7,.65,16],dark,false);boat.rotation.y=.12;
  box('mast',[28,5,58],[.25,10,.25],dark,false);
- // Vegetation and street dressing break the repeated block pattern.
- const treeMat=mat('olive foliage','#465b3e'), trunkMat=mat('aged tree bark','#493729');
- for(const [tx,tz,sz] of [[-70,-12,1.3],[-67,16,1.1],[-61,27,1.25],[61,-22,1.4],[67,18,1.1],[57,34,1.3],[-28,58,1.4],[46,63,1.2]]){
-   cyl('old tree trunk',[tx,2.2*sz,tz],.65*sz,4.4*sz,trunkMat);
-   for(const [ox,oy,oz,scale] of [[0,5,0,3.2],[-1.1,4.3,.3,2.4],[1.1,4.5,-.4,2.5],[0,6.1,.2,2.4]]){
-     const crown=B.MeshBuilder.CreateSphere('leaf canopy',{diameter:scale*sz,segments:7},scene);
-     crown.position.set(tx+ox*sz,oy*sz,tz+oz*sz);crown.material=treeMat;crown.checkCollisions=true;crown.receiveShadows=true;shadow.addShadowCaster(crown);
-   }
- }
- for(let i=0;i<22;i++){
-   const px=-55+(i*37%110),pz=-48+(i*23%96);
-   if(Math.abs(px)<22&&Math.abs(pz)<24)continue;
-   const barrel=cyl('street barrel',[px,.55,pz],.85,1.1,dark);
-   for(let y of [.25,.82])cyl('barrel iron hoop',[px,y,pz],.9,.09,iron);
-   if(i%3===0){box('wooden handcart bed',[px+1,.65,pz+1],[2.3,.25,1.4],dark,false);for(let side of [-1,1])cyl('cart wheel',[px+1+side*1.1,.65,pz+1.7],1.05,.18,leather);}
- }
+ // Trees, barrels and carts are provided by the imported GLB asset set.
  // lamps, banners and street clutter
  for(let x=-4;x<=4;x++)for(let z=-3;z<=2;z++){
    if((x+z)%2===0){const px=x*17+7,pz=z*17+6;if(pz<43){cyl('lamp post',[px,2.3,pz],.16,4.6,iron);box('lantern',[px,4.5,pz],[.65,.75,.65],gold,false);}}
  }
- for(let i=0;i<12;i++){const x=-23+(i%6)*9,z=-17+Math.floor(i/6)*8;box('market stall canopy',[x,3,z],[5,.25,4],i%2?red:green,false);box('market stall table',[x,1.5,z],[4.6,.5,3.6],dark,false);}
+ // Market stalls are loaded as complete GLB assemblies with grounded posts and counters.
  // Character factory: sculpted silhouette, layered garments, articulated limbs and period equipment.
  function person(name,x,z,coat,scale=1,role='civilian'){
    const root=new B.TransformNode(name,scene);root.position.set(x,0,z);
@@ -332,7 +328,7 @@ try {
    if(alert>0)alert=Math.max(0,alert-dt*(stealth?8:2.4));updateUI();updateMap();
    // Camera behind character; pitch controls elevation
    const distance=cameraDistance, elev=2.65+pitch*5.4;
-   const desired=player.root.position.add(new B.Vector3(-Math.sin(yaw)*distance,elev,-Math.cos(yaw)*distance));
+   const desired=player.root.position.add(new B.Vector3(Math.sin(yaw)*distance,elev,Math.cos(yaw)*distance));
    camera.position=B.Vector3.Lerp(camera.position,desired,1-Math.pow(.0008,dt));
    camera.setTarget(player.root.position.add(new B.Vector3(0,1.58,0)));
    const camOrigin=player.root.position.add(new B.Vector3(0,1.5,0));const camDir=camera.position.subtract(camOrigin).normalize();const camRay=new B.Ray(camOrigin,camDir,cameraDistance+1);const camHit=scene.pickWithRay(camRay,m=>m.checkCollisions&&m!==collider&&!m.name.includes('player'));if(camHit&&camHit.hit&&camHit.distance<cameraDistance)camera.position=B.Vector3.Lerp(camera.position,camOrigin.add(camDir.scale(Math.max(4.6,camHit.distance-.7))),.22);
