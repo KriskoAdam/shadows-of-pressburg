@@ -31,6 +31,34 @@ try {
  const shadow=new B.ShadowGenerator(matchMedia('(pointer:coarse)').matches?1024:2048,sun); shadow.useBlurExponentialShadowMap=true; shadow.blurKernel=18; shadow.bias=.0005;
  const mat=(name,color,rough=.9,metal=0)=>{const m=new B.PBRMaterial(name,scene);m.albedoColor=B.Color3.FromHexString(color);m.roughness=rough;m.metallic=metal;return m;};
  const stone=mat('warm limestone','#938575'), pale=mat('aged plaster','#c0ae91'), dark=mat('timber','#49382b'), roof=mat('terracotta','#70483a'), roof2=mat('slate','#454b4d'), road=mat('cobblestone','#55534e'), water=mat('Danube','#263f48',.24,.25), iron=mat('forged iron','#343b3b',.42,.65), gold=mat('aged brass','#b18a4c',.3,.7), cloth=mat('traveller wool','#273d43'), skin=mat('skin','#b98968'), white=mat('linen','#d8cdb7'), red=mat('guard livery','#743b32'), green=mat('merchant green','#53634b'), leather=mat('dark leather','#30251f',.78), steel=mat('tempered steel','#9ba5a4',.24,.82), blue=mat('indigo cloth','#283c55');
+ // Procedural tile surfaces replace flat colour blocks with masonry, plaster, roof slate and worn cobbles.
+ const texture=(name,base,kind)=>{
+   const t=new B.DynamicTexture(name,{width:256,height:256},scene,false),c=t.getContext();
+   c.fillStyle=base;c.fillRect(0,0,256,256);
+   if(kind==='brick'||kind==='slate'){
+     const rows=kind==='brick'?8:12,hh=256/rows;
+     for(let y=0;y<rows;y++)for(let x=-1;x<8;x++){
+       const ww=kind==='brick'?42:32,xx=x*ww+(y%2)*ww*.5;
+       const shade=kind==='brick'?['#9b8d7b','#817666','#aa9a85','#726a61'][Math.floor(Math.random()*4)]:['#555d60','#3b4448','#62696a'][Math.floor(Math.random()*3)];
+       c.fillStyle=shade;c.fillRect(xx+1,y*hh+1,ww-2,hh-2);
+       c.strokeStyle='#292e30';c.lineWidth=2;c.strokeRect(xx+1,y*hh+1,ww-2,hh-2);
+       c.fillStyle='#ffffff12';c.fillRect(xx+3,y*hh+3,ww-6,2);
+     }
+   } else if(kind==='cobble'){
+     for(let y=0;y<256;y+=23)for(let x=0;x<256;x+=34){
+       const xx=x+(Math.floor(y/23)%2)*17,shade=['#65625c','#4c4d4a','#777168','#595650'][Math.floor(Math.random()*4)];
+       c.fillStyle=shade;c.beginPath();c.roundRect(xx+1,y+1,31,19,5);c.fill();
+       c.strokeStyle='#292d2d';c.lineWidth=2;c.stroke();
+     }
+   } else {
+     for(let i=0;i<950;i++){const x=Math.random()*256,y=Math.random()*256,a=.025+Math.random()*.07;c.fillStyle='rgba(30,22,15,'+a+')';c.fillRect(x,y,1+Math.random()*3,1+Math.random()*3);}
+   }
+   t.update(false);t.wrapU=t.wrapV=B.Texture.WRAP_ADDRESSMODE;t.uScale=2;t.vScale=2;return t;
+ };
+ for(const [m,n,b,k] of [[stone,'limestone texture','#938575','brick'],[pale,'plaster texture','#b9a98e','noise'],[roof,'clay roof texture','#70483a','brick'],[roof2,'slate roof texture','#454b4d','slate'],[road,'cobble road texture','#55534e','cobble'],[dark,'oak timber texture','#49382b','noise']]){
+   m.albedoTexture=texture(n,b,k);m.albedoColor=B.Color3.White();
+ }
+
  const ground=B.MeshBuilder.CreateGround('city ground',{width:230,height:230,subdivisions:2},scene);ground.position.y=-.15;ground.material=road;ground.checkCollisions=true;ground.receiveShadows=true;
  // Start rendering as soon as the base scene exists; later construction errors must not leave a blank canvas.
  let renderFault=null; engine.runRenderLoop(()=>{try{scene.render();}catch(e){renderFault=e;const eb=$('errorBox');if(eb){eb.style.display='block';eb.textContent='Chyba vykresľovania: '+e.message;}}});
@@ -171,7 +199,7 @@ try {
    let blade=null;
    if(role!=='civilian'){
      const scabbard=boxPart(name+' sword scabbard',root,[.48,1.02,.19],[.13,.95,.16],leather);scabbard.rotation.z=-.28;
-     blade=cylinder(name+' steel sword blade',armR,[0,-.53,-.06],.035,.085,.94,steel);blade.rotation.x=Math.PI/2;
+     blade=cylinder(name+' steel sword blade',armR,[0,-.53,-.06],.035,.085,.94,steel);
      boxPart(name+' sword crossguard',armR,[0,-1.01,-.06],[.42,.065,.1],gold);
      cylinder(name+' sword grip',armR,[0,-1.16,-.06],.085,.085,.24,leather);
      sphere(name+' sword pommel',armR,[0,-1.31,-.06],.13,gold);
