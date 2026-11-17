@@ -10,8 +10,9 @@ def cyl(r,h,p,c,n=12):
 def sphere(r,p,c):
  m=trimesh.creation.icosphere(subdivisions=2,radius=r);m.apply_translation(p);return paint(m,C[c])
 def export(name,parts):
- s=trimesh.Scene()
- for i,m in enumerate(parts): s.add_geometry(m,node_name=f"{name}_{i}",geom_name=f"{name}_{i}")
+ mesh=trimesh.util.concatenate(parts)
+ mesh.merge_vertices(); mesh.remove_unreferenced_vertices(); mesh.fix_normals()
+ s=trimesh.Scene(); s.add_geometry(mesh,node_name=name,geom_name=name)
  s.export(os.path.join(OUT,name+".glb"))
 # Pressburg half-timber merchant house, dimensions approx 10x11x9m
 p=[box((9.2,7.2,8.4),(0,3.6,0),'plaster'),box((9.55,.3,8.7),(0,.2,0),'stone')]
