@@ -15,20 +15,20 @@ function boot(){
 try {
  const B=window.BABYLON;
  const engine=new B.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,adaptToDeviceRatio:true});
- engine.setHardwareScalingLevel(Math.min(1.5,1/Math.min(window.devicePixelRatio||1,1.5)));
+ engine.setHardwareScalingLevel(matchMedia('(pointer:coarse)').matches?Math.max(1,Math.min(1.5,(window.devicePixelRatio||1)/1.35)):Math.min(1.15,1/Math.min(window.devicePixelRatio||1,1.15)));
  const scene=new B.Scene(engine);
  scene.clearColor=new B.Color4(.055,.075,.09,1);
  scene.collisionsEnabled=true;
  scene.gravity=new B.Vector3(0,-18,0);
- scene.fogMode=B.Scene.FOGMODE_EXP2; scene.fogDensity=.0038;
+ scene.fogMode=B.Scene.FOGMODE_EXP2; scene.fogDensity=.0028;
  scene.fogColor=new B.Color3(.30,.34,.34);
  const camera=new B.FreeCamera('followCamera',new B.Vector3(0,5,-9),scene);
  camera.minZ=.1; camera.maxZ=450; camera.fov=.82; camera.inputs.clear();
  const hemi=new B.HemisphericLight('skyFill',new B.Vector3(0,1,0),scene);
- hemi.intensity=.72; hemi.groundColor=new B.Color3(.24,.20,.16);
+ hemi.intensity=.82; hemi.groundColor=new B.Color3(.24,.20,.16);
  const sun=new B.DirectionalLight('lateSun',new B.Vector3(-.45,-1,.35),scene);
- sun.position=new B.Vector3(65,90,-55); sun.intensity=2.1;
- const shadow=new B.ShadowGenerator(2048,sun); shadow.useBlurExponentialShadowMap=true; shadow.blurKernel=24; shadow.bias=.0005;
+ sun.position=new B.Vector3(65,90,-55); sun.intensity=1.65;
+ const shadow=new B.ShadowGenerator(matchMedia('(pointer:coarse)').matches?1024:2048,sun); shadow.useBlurExponentialShadowMap=true; shadow.blurKernel=18; shadow.bias=.0005;
  const mat=(name,color,rough=.9,metal=0)=>{const m=new B.PBRMaterial(name,scene);m.albedoColor=B.Color3.FromHexString(color);m.roughness=rough;m.metallic=metal;return m;};
  const stone=mat('warm limestone','#938575'), pale=mat('aged plaster','#c0ae91'), dark=mat('timber','#49382b'), roof=mat('terracotta','#70483a'), roof2=mat('slate','#454b4d'), road=mat('cobblestone','#55534e'), water=mat('Danube','#263f48',.24,.25), iron=mat('forged iron','#343b3b',.42,.65), gold=mat('aged brass','#b18a4c',.3,.7), cloth=mat('traveller wool','#273d43'), skin=mat('skin','#b98968'), white=mat('linen','#d8cdb7'), red=mat('guard livery','#743b32'), green=mat('merchant green','#53634b'), leather=mat('dark leather','#30251f',.78), steel=mat('tempered steel','#9ba5a4',.24,.82), blue=mat('indigo cloth','#283c55');
  const ground=B.MeshBuilder.CreateGround('city ground',{width:230,height:230,subdivisions:2},scene);ground.position.y=-.15;ground.material=road;ground.checkCollisions=true;ground.receiveShadows=true;
@@ -113,41 +113,77 @@ try {
    if((x+z)%2===0){const px=x*17+7,pz=z*17+6;if(pz<43){cyl('lamp post',[px,2.3,pz],.16,4.6,iron);box('lantern',[px,4.5,pz],[.65,.75,.65],gold,false);}}
  }
  for(let i=0;i<12;i++){const x=-23+(i%6)*9,z=-17+Math.floor(i/6)*8;box('market stall canopy',[x,3,z],[5,.25,4],i%2?red:green,false);box('market stall table',[x,1.5,z],[4.6,.5,3.6],dark,false);}
- // Character factory: layered late-medieval clothing, articulated limbs, face and arming sword
+ // Character factory: sculpted silhouette, layered garments, articulated limbs and period equipment.
  function person(name,x,z,coat,scale=1,role='civilian'){
    const root=new B.TransformNode(name,scene);root.position.set(x,0,z);
-   const part=(n,p,s,m,parent=root)=>{const o=B.MeshBuilder.CreateBox(n,{width:s[0],height:s[1],depth:s[2]},scene);o.parent=parent;o.position.set(...p);o.material=m;return o;};
-   const sphere=(n,p,d,m)=>{const o=B.MeshBuilder.CreateSphere(n,{diameter:d,segments:16},scene);o.parent=root;o.position.set(...p);o.material=m;return o;};
-   const torso=part(name+' tailored doublet',[0,1.43,0],[.72,1.08,.43],coat);
-   const chest=part(name+' chest panel',[0,1.48,-.225],[.38,.78,.035],role==='guard'?red:leather);
-   part(name+' leather belt',[0,1.03,-.01],[.79,.13,.48],leather);
-   part(name+' brass buckle',[0,1.04,-.255],[.13,.14,.04],gold);
-   part(name+' shoulder mantle',[0,1.86,.18],[.83,.38,.2],role==='guard'?red:blue);
-   const neck=cyl(name+' neck',[0,2.04,0],.23,.28,skin);neck.parent=root;
-   sphere(name+' head',[0,2.35,0],.49,skin);
-   const hair=sphere(name+' hair cap',[0,2.52,.045],.51,dark);hair.scaling.y=.46;
-   sphere(name+' left eye',[-.105,2.38,-.226],.055,white);sphere(name+' right eye',[.105,2.38,-.226],.055,white);
-   sphere(name+' left pupil',[-.105,2.38,-.253],.025,iron);sphere(name+' right pupil',[.105,2.38,-.253],.025,iron);
-   part(name+' nose',[0,2.29,-.25],[.09,.15,.09],skin);
-   part(name+' wool cap',[0,2.61,0],[.59,.17,.59],role==='guard'?red:dark);
-   part(name+' cap brim',[0,2.55,-.08],[.72,.07,.68],leather);
-   const armL=part(name+' left sleeve',[-.48,1.49,0],[.25,.88,.28],coat),armR=part(name+' right sleeve',[.48,1.49,0],[.25,.88,.28],coat);
-   armL.setPivotPoint(new B.Vector3(0,.36,0));armR.setPivotPoint(new B.Vector3(0,.36,0));
-   part(name+' left glove',[-.48,1.02,0],[.24,.2,.25],leather);part(name+' right glove',[.48,1.02,0],[.24,.2,.25],leather);
-   const legL=part(name+' left breeches',[-.2,.52,0],[.29,1,.32],dark),legR=part(name+' right breeches',[.2,.52,0],[.29,1,.32],dark);
-   legL.setPivotPoint(new B.Vector3(0,.42,0));legR.setPivotPoint(new B.Vector3(0,.42,0));
-   part(name+' left boot',[-.2,.13,-.055],[.34,.28,.48],leather);part(name+' right boot',[.2,.13,-.055],[.34,.28,.48],leather);
+   const mesh=(n,geo,parent,material,pos=[0,0,0])=>{const o=geo;o.name=n;o.parent=parent;o.position.set(...pos);o.material=material;o.receiveShadows=true;shadow.addShadowCaster(o);return o;};
+   const capsule=(n,parent,pos,r,h,material)=>mesh(n,B.MeshBuilder.CreateCapsule(n,{height:h,radius:r,tessellation:14,subdivisions:4},scene),parent,material,pos);
+   const sphere=(n,parent,pos,diam,material)=>mesh(n,B.MeshBuilder.CreateSphere(n,{diameter:diam,segments:16},scene),parent,material,pos);
+   const boxPart=(n,parent,pos,size,material)=>mesh(n,B.MeshBuilder.CreateBox(n,{width:size[0],height:size[1],depth:size[2]},scene),parent,material,pos);
+   const cylinder=(n,parent,pos,top,bottom,height,material)=>mesh(n,B.MeshBuilder.CreateCylinder(n,{diameterTop:top,diameterBottom:bottom,height,tessellation:14},scene),parent,material,pos);
+   // Torso and tailored coat layers
+   cylinder(name+' shaped torso',root,[0,1.48,0],.48,.78,1.18,coat);
+   cylinder(name+' lower tunic',root,[0,.99,.015],.62,.76,.42,role==='guard'?red:blue);
+   boxPart(name+' front leather jerkin',root,[0,1.48,-.265],[.43,.78,.055],role==='guard'?iron:leather);
+   boxPart(name+' waist belt',root,[0,1.05,-.015],[.79,.12,.52],leather);
+   boxPart(name+' brass belt buckle',root,[0,1.06,-.285],[.13,.15,.045],gold);
+   for(let side of [-1,1]){
+     const strap=boxPart(name+' diagonal baldric',root,[side*.12,1.49,-.302],[.09,.92,.045],gold);strap.rotation.z=side*.22;
+     sphere(name+' shoulder rivet',root,[side*.38,1.83,-.05],.13,role==='guard'?iron:leather);
+   }
+   // Neck, face, ears, hair and cap
+   cylinder(name+' neck',root,[0,2.12,0],.19,.22,.34,skin);
+   sphere(name+' head',root,[0,2.43,-.015],.49,skin);
+   sphere(name+' hair crown',root,[0,2.59,.055],.51,dark);
+   boxPart(name+' hair back',root,[0,2.39,.205],[.43,.43,.22],dark);
+   for(const side of [-1,1]){
+     sphere(name+' ear',root,[side*.235,2.42,-.01],.12,skin);
+     sphere(name+' eye white',root,[side*.105,2.46,-.235],.065,white);
+     sphere(name+' pupil',root,[side*.105,2.46,-.27],.029,iron);
+     const brow=boxPart(name+' eyebrow',root,[side*.105,2.53,-.255],[.12,.035,.035],dark);brow.rotation.z=side*.08;
+   }
+   const nose=sphere(name+' nose',root,[0,2.37,-.255],.09,skin);nose.scaling.set(.7,1.35,.7);
+   boxPart(name+' wool cap',root,[0,2.68,.015],[.58,.17,.58],role==='guard'?red:dark);
+   cylinder(name+' cap crown',root,[0,2.77,.015],.35,.48,.15,role==='guard'?red:dark);
+   boxPart(name+' cap brim',root,[0,2.61,-.08],[.68,.055,.66],leather);
+   // Shoulder joints and animated sleeves
+   const armL=new B.TransformNode(name+' left arm pivot',scene);armL.parent=root;armL.position.set(-.43,1.91,0);
+   const armR=new B.TransformNode(name+' right arm pivot',scene);armR.parent=root;armR.position.set(.43,1.91,0);
+   for(const [side,arm] of [[-1,armL],[1,armR]]){
+     capsule(name+' upper sleeve',arm,[0,-.31,0],.145,.73,coat);
+     capsule(name+' forearm',arm,[0,-.78,-.015],.115,.48,role==='guard'?red:coat);
+     capsule(name+' leather glove',arm,[0,-1.02,-.02],.105,.23,leather);
+     if(role==='guard')cylinder(name+' vambrace',arm,[0,-.79,-.02],.24,.24,.28,iron);
+   }
+   // Separate hip joints and boots allow a readable walk cycle.
+   const legL=new B.TransformNode(name+' left leg pivot',scene);legL.parent=root;legL.position.set(-.2,.94,0);
+   const legR=new B.TransformNode(name+' right leg pivot',scene);legR.parent=root;legR.position.set(.2,.94,0);
+   for(const [side,leg] of [[-1,legL],[1,legR]]){
+     capsule(name+' wool breeches',leg,[0,-.34,0],.17,.78,role==='guard'?dark:leather);
+     capsule(name+' shin',leg,[0,-.72,-.015],.135,.55,dark);
+     const boot=boxPart(name+' tall boot',leg,[0,-.96,-.075],[.29,.27,.48],leather);boot.rotation.x=-.08;
+     boxPart(name+' boot cuff',leg,[0,-.82,-.015],[.3,.12,.3],role==='guard'?iron:dark);
+   }
+   // Cloak, hood and equipment silhouette
+   const cloak=boxPart(name+' heavy travelling cloak',root,[0,1.31,.27],[.77,1.2,.17],role==='guard'?red:blue);cloak.rotation.x=-.08;
+   sphere(name+' hood',root,[0,2.46,.18],.59,leather).scaling.set(1,1,.78);
+   boxPart(name+' shoulder cape',root,[0,1.9,.16],[.9,.23,.4],role==='guard'?red:blue);
    let blade=null;
    if(role!=='civilian'){
-     part(name+' sword scabbard',[.48,1.02,.18],[.12,.95,.15],leather).rotation.z=-.28;
-     blade=part(name+' sword blade',[0,.49,-.035],[.095,.9,.035],steel,armR);
-     const point=B.MeshBuilder.CreateCylinder(name+' sword point',{diameterTop:0,diameterBottom:.095,height:.2,tessellation:4},scene);point.parent=armR;point.position.set(0,.98,-.035);point.material=steel;point.rotation.x=Math.PI/2;
-     part(name+' sword crossguard',[0,.05,-.035],[.42,.07,.1],gold,armR);
-     part(name+' sword grip',[0,-.13,-.035],[.09,.22,.1],leather,armR);
-     const pommel=sphere(name+' sword pommel',[0,-.26,-.035],.12,gold);pommel.parent=armR;pommel.position.set(0,-.26,-.035);
+     const scabbard=boxPart(name+' sword scabbard',root,[.48,1.02,.19],[.13,.95,.16],leather);scabbard.rotation.z=-.28;
+     blade=cylinder(name+' steel sword blade',armR,[0,-.53,-.06],.035,.085,.94,steel);blade.rotation.x=Math.PI/2;
+     boxPart(name+' sword crossguard',armR,[0,-1.01,-.06],[.42,.065,.1],gold);
+     cylinder(name+' sword grip',armR,[0,-1.16,-.06],.085,.085,.24,leather);
+     sphere(name+' sword pommel',armR,[0,-1.31,-.06],.13,gold);
    }
-   if(role==='guard'){part(name+' shoulder plate L',[-.47,1.88,0],[.37,.24,.42],iron);part(name+' shoulder plate R',[.47,1.88,0],[.37,.24,.42],iron);part(name+' chest crest',[0,1.68,-.25],[.19,.25,.04],gold);}
-   const parts=root.getChildMeshes();parts.forEach(m=>{m.scaling.scaleInPlace(scale);shadow.addShadowCaster(m);});
+   if(role==='guard'){
+     for(const side of [-1,1]){
+       const pauldron=sphere(name+' steel pauldron',root,[side*.43,1.88,0],.43,iron);pauldron.scaling.set(1,.62,1);
+       sphere(name+' pauldron rivet',root,[side*.43,1.91,-.21],.09,gold);
+     }
+     boxPart(name+' heraldic chest plate',root,[0,1.58,-.31],[.24,.32,.06],gold);
+   }
+   root.getChildMeshes().forEach(m=>m.scaling.scaleInPlace(scale));
    return {root,armL,armR,legL,legR,phase:Math.random()*6.28,alive:true,weapon:blade};
  }
  const player=person('Matej Varga',0,8,blue,1,'hero');player.root.position.y=0;
@@ -167,6 +203,24 @@ try {
  const toast=t=>{$('toast').textContent=t;toastUntil=performance.now()+2600;};
  const updateUI=()=>{$('hp').style.width=hp+'%';$('alert').textContent='POZORNOSŤ STRÁŽÍ: '+(alert>70?'VYSOKÁ':alert>25?'ZVÝŠENÁ':'NÍZKA');$('objective').textContent=['Nájdi Annu pri rybnom trhu.','Získaj od Anny zapečatený list.','Dostaň sa k mestskému archívu.','Strias prenasledovateľov a unikni.'][objective]||'Kapitola dokončená';};
  updateUI();
+ const updateMap=()=>{
+   const c=$('miniMap');if(!c)return;const ctx=c.getContext('2d'),w=c.width,h=c.height;
+   ctx.clearRect(0,0,w,h);ctx.fillStyle='#17251f';ctx.fillRect(0,0,w,h);
+   const px=x=>w/2+x*1.03,py(z)=>h/2-z*1.03;
+   ctx.fillStyle='#294653';ctx.beginPath();ctx.moveTo(px(-55),py(48));ctx.lineTo(px(55),py(48));ctx.lineTo(px(55),py(106));ctx.lineTo(px(-55),py(106));ctx.closePath();ctx.fill();
+   ctx.strokeStyle='#b2a38a';ctx.lineWidth=5;ctx.strokeRect(px(-82),py(-63),164*1.03,105*1.03);
+   ctx.strokeStyle='#8e806b';ctx.lineWidth=4;
+   for(let z=-52;z<44;z+=17){ctx.beginPath();ctx.moveTo(px(-72),py(z));ctx.lineTo(px(72),py(z));ctx.stroke();}
+   for(let x=-68;x<76;x+=17){ctx.beginPath();ctx.moveTo(px(x),py(-58));ctx.lineTo(px(x),py(40));ctx.stroke();}
+   ctx.strokeStyle='#d7c7a8';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(px(-18),py(0));ctx.lineTo(px(18),py(0));ctx.moveTo(px(0),py(-48));ctx.lineTo(px(0),py(44));ctx.stroke();
+   ctx.fillStyle='#c7a66c';ctx.fillRect(px(-18),py(8),36,26);
+   const marker=(x,z,color,r)=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(px(x),py(z),r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f1e4c9';ctx.lineWidth=1.5;ctx.stroke();};
+   marker(-48,40,'#d6bd8a',6);marker(-35,-13,'#d6bd8a',5);marker(0,-35,'#d6bd8a',5);marker(28,58,'#8bb0bd',4);
+   if(anna)marker(anna.root.position.x,anna.root.position.z,'#78c995',4);
+   marker(player.root.position.x,player.root.position.z,'#f4e4c4',5);
+   ctx.save();ctx.translate(px(player.root.position.x),py(player.root.position.z));ctx.rotate(-player.root.rotation.y);ctx.fillStyle='#fff2ce';ctx.beginPath();ctx.moveTo(0,-11);ctx.lineTo(-5,5);ctx.lineTo(5,5);ctx.closePath();ctx.fill();ctx.restore();
+ };
+ updateMap();
  // Input: keyboard, pointer lock, touch joystick, touch camera, gamepad
  const keys={};window.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='Escape'&&started)pauseGame();if(e.code==='KeyC')stealth=true;if(e.code==='ShiftLeft'||e.code==='ShiftRight')sprinting=true;});
  window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyC')stealth=false;if(e.code==='ShiftLeft'||e.code==='ShiftRight')sprinting=false;});
@@ -190,7 +244,18 @@ try {
  const sprintButton=$('sprint');if(sprintButton){sprintButton.addEventListener('pointerdown',e=>{e.preventDefault();sprinting=true;sprintButton.setPointerCapture(e.pointerId);});const stopSprint=()=>sprinting=false;sprintButton.addEventListener('pointerup',stopSprint);sprintButton.addEventListener('pointercancel',stopSprint);sprintButton.addEventListener('lostpointercapture',stopSprint);}
  $('pause').addEventListener('click',pauseGame);$('resume').addEventListener('click',()=>{paused=false;$('pauseScreen').style.display='none';$('pause').style.display='block';lastTime=performance.now();});
  function pauseGame(){if(!started)return;paused=true;$('pauseScreen').style.display='flex';$('pause').style.display='none';if(document.pointerLockElement)document.exitPointerLock();}
- start.addEventListener('click',()=>{if(start.disabled)return;started=true;overlay.style.display='none';$('pause').style.display='block';toast('Prešporok, rok 1567. Nájdite Annu.');if(matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.();});
+ start.addEventListener('click',()=>{
+   if(start.disabled)return;
+   start.disabled=true;overlay.style.display='none';
+   const loading=$('loadingScreen'),bar=$('loadBar'),percent=$('loadPercent'),message=$('loadMessage');
+   loading.style.display='flex';
+   const phases=['Overujem herný svet…','Pripravujem postavy a výstroj…','Synchronizujem mapu Prešporka…','Dokončujem osvetlenie a tiene…','Misia je pripravená.'];
+   let p=0;const timer=setInterval(()=>{
+     p=Math.min(100,p+Math.max(5,Math.round((100-p)*.24)));
+     bar.style.width=p+'%';percent.textContent=p+' %';message.textContent=phases[Math.min(phases.length-1,Math.floor(p/25))];
+     if(p>=100){clearInterval(timer);setTimeout(()=>{loading.style.display='none';started=true;$('pause').style.display='block';toast('Prešporok, rok 1567. Nájdite Annu.');if(matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.();},250);}
+   },110);
+ });
  start.disabled=false;start.textContent='ZAČAŤ HRU';setStatus('3D svet je pripravený.');$('errorBox').style.display='none';
  // Camera, movement and world simulation
  const vForward=new B.Vector3(),vRight=new B.Vector3();
@@ -210,7 +275,7 @@ try {
    // Guards investigate and pursue when visible / noisy
    for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(g.root.position,player.root.position);if(dist<17&&(!stealth||dist<6)){alert=Math.min(100,alert+dt*(dist<7?28:9));const d=player.root.position.subtract(g.root.position);d.y=0;d.normalize();g.root.position.addInPlace(d.scale(dt*(dist<4?1.8:2.7)));g.root.rotation.y=Math.atan2(d.x,d.z);if(dist<1.8&&t%900<dt*1000){hp=Math.max(0,hp-7);$('hp').style.width=hp+'%';}}else{g.root.position.x+=Math.sin(t*.0003+g.phase)*dt*.25;}}
    if(!gp?.buttons[4]?.pressed&&gp)stealth=false;if(!gp?.buttons[5]?.pressed&&!gp?.buttons[7]?.pressed&&gp)sprinting=false;
-   if(alert>0)alert=Math.max(0,alert-dt*(stealth?8:2.4));updateUI();
+   if(alert>0)alert=Math.max(0,alert-dt*(stealth?8:2.4));updateUI();updateMap();
    // Camera behind character; pitch controls elevation
    const distance=cameraDistance, elev=2.65+pitch*5.4;
    const desired=player.root.position.add(new B.Vector3(-Math.sin(yaw)*distance,elev,-Math.cos(yaw)*distance));
