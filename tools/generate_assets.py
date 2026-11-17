@@ -11,7 +11,7 @@ def sphere(r,p,c):
  m=trimesh.creation.icosphere(subdivisions=2,radius=r);m.apply_translation(p);return paint(m,C[c])
 def export(name,parts):
  mesh=trimesh.util.concatenate(parts)
- mesh.merge_vertices(); mesh.remove_unreferenced_vertices()
+ mesh.merge_vertices(); mesh.remove_unreferenced_vertices(); mesh.fix_normals(multibody=True)
  s=trimesh.Scene(); s.add_geometry(mesh,node_name=name,geom_name=name)
  s.export(os.path.join(OUT,name+".glb"))
 # Pressburg half-timber merchant house, dimensions approx 10x11x9m
@@ -31,9 +31,9 @@ p.append(box((10.25,.35,.42),(0,9.65,0),'timber'))
 for x in [-3.5,3.5]: p += [box((.9,2.2,.9),(x,9.9,1.6),'stone'),box((1.1,.22,1.1),(x,11.05,1.6),'timber')]
 export("pressburg_house",p)
 # Market stall with timber legs and canvas roof
-p=[box((4.8,.22,3.4),(0,1.35,0),'timber'),box((4.5,.18,3.1),(0,1.65,0),'gold')]
+p=[box((4.8,.22,3.4),(0,.92,0),'timber'),box((4.5,.18,3.1),(0,1.08,0),'gold')]
 for x in [-2,2]:
- for z in [-1.3,1.3]: p.append(cyl(.09,3.2,(x,2.95,z),'timber'))
+ for z in [-1.3,1.3]: p.append(cyl(.09,4.6,(x,2.3,z),'timber'))
 p.append(box((5.3,.25,4.0),(0,4.6,0),'roof'))
 for x in np.linspace(-2.2,2.2,6): p.append(box((.32,.26,4.05),(x,4.75,0),'gold'))
 export("market_stall",p)
