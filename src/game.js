@@ -234,7 +234,7 @@ try {
  const updateMap=()=>{
    const c=$('miniMap');if(!c)return;const ctx=c.getContext('2d'),w=c.width,h=c.height;
    ctx.clearRect(0,0,w,h);ctx.fillStyle='#17251f';ctx.fillRect(0,0,w,h);
-   const px=x=>w/2+x*1.03,py(z)=>h/2-z*1.03;
+   const px=x=>w/2+x*1.03,py=z=>h/2-z*1.03;
    ctx.fillStyle='#294653';ctx.beginPath();ctx.moveTo(px(-55),py(48));ctx.lineTo(px(55),py(48));ctx.lineTo(px(55),py(106));ctx.lineTo(px(-55),py(106));ctx.closePath();ctx.fill();
    ctx.strokeStyle='#b2a38a';ctx.lineWidth=5;ctx.strokeRect(px(-82),py(-63),164*1.03,105*1.03);
    ctx.strokeStyle='#8e806b';ctx.lineWidth=4;
