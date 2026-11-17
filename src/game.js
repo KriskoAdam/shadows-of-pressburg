@@ -17,18 +17,18 @@ try {
  const engine=new B.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,adaptToDeviceRatio:true});
  engine.setHardwareScalingLevel(matchMedia('(pointer:coarse)').matches?Math.max(1,Math.min(1.5,(window.devicePixelRatio||1)/1.35)):Math.min(1.15,1/Math.min(window.devicePixelRatio||1,1.15)));
  const scene=new B.Scene(engine);
- scene.clearColor=new B.Color4(.055,.075,.09,1);
+ scene.clearColor=new B.Color4(.48,.56,.59,1);
  scene.collisionsEnabled=true;
  scene.gravity=new B.Vector3(0,-18,0);
- scene.fogMode=B.Scene.FOGMODE_EXP2; scene.fogDensity=.0028;
- scene.fogColor=new B.Color3(.30,.34,.34);
+ scene.fogMode=B.Scene.FOGMODE_EXP2; scene.fogDensity=.0019;
+ scene.fogColor=new B.Color3(.42,.43,.40);
  const camera=new B.FreeCamera('followCamera',new B.Vector3(0,5,-9),scene);
- camera.minZ=.1; camera.maxZ=450; camera.fov=.82; camera.inputs.clear();
+ camera.minZ=.2; camera.maxZ=450; camera.fov=.74; camera.inputs.clear();
  const hemi=new B.HemisphericLight('skyFill',new B.Vector3(0,1,0),scene);
- hemi.intensity=.82; hemi.groundColor=new B.Color3(.24,.20,.16);
+ hemi.intensity=.68; hemi.groundColor=new B.Color3(.24,.20,.16);
  const sun=new B.DirectionalLight('lateSun',new B.Vector3(-.45,-1,.35),scene);
- sun.position=new B.Vector3(65,90,-55); sun.intensity=1.65;
- const shadow=new B.ShadowGenerator(matchMedia('(pointer:coarse)').matches?1024:2048,sun); shadow.useBlurExponentialShadowMap=true; shadow.blurKernel=18; shadow.bias=.0005;
+ sun.position=new B.Vector3(65,90,-55); sun.intensity=2.0;
+ const shadow=new B.ShadowGenerator(matchMedia('(pointer:coarse)').matches?1024:2048,sun); shadow.useBlurExponentialShadowMap=true; shadow.blurKernel=28; shadow.bias=.0005;
  const mat=(name,color,rough=.9,metal=0)=>{const m=new B.PBRMaterial(name,scene);m.albedoColor=B.Color3.FromHexString(color);m.roughness=rough;m.metallic=metal;return m;};
  const stone=mat('warm limestone','#938575'), pale=mat('aged plaster','#c0ae91'), dark=mat('timber','#49382b'), roof=mat('terracotta','#70483a'), roof2=mat('slate','#454b4d'), road=mat('cobblestone','#55534e'), water=mat('Danube','#263f48',.24,.25), iron=mat('forged iron','#343b3b',.42,.65), gold=mat('aged brass','#b18a4c',.3,.7), cloth=mat('traveller wool','#273d43'), skin=mat('skin','#b98968'), white=mat('linen','#d8cdb7'), red=mat('guard livery','#743b32'), green=mat('merchant green','#53634b'), leather=mat('dark leather','#30251f',.78), steel=mat('tempered steel','#9ba5a4',.24,.82), blue=mat('indigo cloth','#283c55');
  // Procedural tile surfaces replace flat colour blocks with masonry, plaster, roof slate and worn cobbles.
@@ -36,9 +36,9 @@ try {
    const t=new B.DynamicTexture(name,{width:256,height:256},scene,false),c=t.getContext();
    c.fillStyle=base;c.fillRect(0,0,256,256);
    if(kind==='brick'||kind==='slate'){
-     const rows=kind==='brick'?8:12,hh=256/rows;
+     const rows=kind==='brick'?24:30,hh=256/rows;
      for(let y=0;y<rows;y++)for(let x=-1;x<8;x++){
-       const ww=kind==='brick'?42:32,xx=x*ww+(y%2)*ww*.5;
+       const ww=kind==='brick'?22:18,xx=x*ww+(y%2)*ww*.5;
        const shade=kind==='brick'?['#9b8d7b','#817666','#aa9a85','#726a61'][Math.floor(Math.random()*4)]:['#555d60','#3b4448','#62696a'][Math.floor(Math.random()*3)];
        c.fillStyle=shade;c.fillRect(xx+1,y*hh+1,ww-2,hh-2);
        c.strokeStyle='#292e30';c.lineWidth=2;c.strokeRect(xx+1,y*hh+1,ww-2,hh-2);
@@ -51,9 +51,9 @@ try {
        c.strokeStyle='#292d2d';c.lineWidth=2;c.stroke();
      }
    } else {
-     for(let i=0;i<950;i++){const x=Math.random()*256,y=Math.random()*256,a=.025+Math.random()*.07;c.fillStyle='rgba(30,22,15,'+a+')';c.fillRect(x,y,1+Math.random()*3,1+Math.random()*3);}
+     for(let i=0;i<1800;i++){const x=Math.random()*256,y=Math.random()*256,a=.025+Math.random()*.07;c.fillStyle='rgba(30,22,15,'+a+')';c.fillRect(x,y,1+Math.random()*3,1+Math.random()*3);}
    }
-   t.update(false);t.wrapU=t.wrapV=B.Texture.WRAP_ADDRESSMODE;t.uScale=2;t.vScale=2;return t;
+   t.update(false);t.wrapU=t.wrapV=B.Texture.WRAP_ADDRESSMODE;t.uScale=5;t.vScale=5;return t;
  };
  for(const [m,n,b,k] of [[stone,'limestone texture','#938575','brick'],[pale,'plaster texture','#b9a98e','noise'],[roof,'clay roof texture','#70483a','brick'],[roof2,'slate roof texture','#454b4d','slate'],[road,'cobble road texture','#55534e','cobble'],[dark,'oak timber texture','#49382b','noise']]){
    m.albedoTexture=texture(n,b,k);m.albedoColor=B.Color3.White();
@@ -75,7 +75,13 @@ try {
    const w=11+((x*7+z*11+80)%4), d=10+((x*13-z*5+90)%4), h=9+((Math.abs(x*17+z*13))%9);
    const body=box('merchant house',[bx,h/2,bz],[w,h,d],(x+z)%3===0?pale:stone);
    const roofmat=(x+z)%2?roof:roof2;
-   const r=B.MeshBuilder.CreateBox('pitched roof',{width:w+1.2,height:1.1,depth:d+1.2},scene);r.position.set(bx,h+.35,bz);r.rotation.z=.08;r.material=roofmat;r.checkCollisions=true;
+   const roofRise=Math.min(3.1,d*.27),roofHalf=d*.56;
+   const roofA=B.MeshBuilder.CreateBox('front pitched roof',{width:w+1.5,height:.42,depth:roofHalf},scene);
+   roofA.position.set(bx,h+roofRise*.48,bz-d*.25);roofA.rotation.x=-Math.atan2(roofRise,roofHalf);roofA.material=roofmat;roofA.checkCollisions=true;roofA.receiveShadows=true;
+   const roofB=B.MeshBuilder.CreateBox('rear pitched roof',{width:w+1.5,height:.42,depth:roofHalf},scene);
+   roofB.position.set(bx,h+roofRise*.48,bz+d*.25);roofB.rotation.x=Math.atan2(roofRise,roofHalf);roofB.material=roofmat;roofB.checkCollisions=true;roofB.receiveShadows=true;
+   box('roof ridge timber',[bx,h+roofRise,bz],[w+1.7,.24,.28],dark,false);
+   for(const sideZ of [-1,1])box('carved roof eave',[bx,h+.2,bz+sideZ*(d/2+.55)],[w+1.8,.28,.3],dark,false);
    // timber framing and facade details
    for(let side of [-1,1]){
      const frontZ=bz+side*(d/2+.04);
@@ -83,6 +89,11 @@ try {
        const win=box('deep window',[bx+xx,yy,frontZ],[1.15,1.55,.12],dark,false);
        const pane=box('window shadow',[bx+xx,yy,frontZ+side*.08],[.78,1.16,.05],iron,false);
        box('window sill',[bx+xx,yy-.88,frontZ+side*.12],[1.35,.13,.28],pale,false);
+       for(const sx of [-1,1])box('stone window jamb',[bx+xx+sx*.57,yy,frontZ+side*.12],[.13,1.7,.18],pale,false);
+       box('stone window lintel',[bx+xx,yy+.84,frontZ+side*.12],[1.32,.14,.2],pale,false);
+       box('window crossbar vertical',[bx+xx,yy,frontZ+side*.16],[.055,1.08,.05],gold,false);
+       box('window crossbar horizontal',[bx+xx,yy,frontZ+side*.17],[.82,.055,.05],gold,false);
+       for(const sx of [-1,1])box('wooden shutter',[bx+xx+sx*.72,yy,frontZ+side*.18],[.25,1.2,.12],dark,false);
      }
      box('timber beam',[bx,h*.55,frontZ],[w,.16,.18],dark,false);
      box('timber upright',[bx-w*.38,h*.5,frontZ],[.16,h*.9,.18],dark,false);
@@ -136,6 +147,22 @@ try {
  for(let i=0;i<4;i++){box('dock plank',[22+i*2,.1,47],[1.8,.35,18],dark,false);}
  const boat=box('merchant barge',[28,.15,58],[7,.65,16],dark,false);boat.rotation.y=.12;
  box('mast',[28,5,58],[.25,10,.25],dark,false);
+ // Vegetation and street dressing break the repeated block pattern.
+ const treeMat=mat('olive foliage','#465b3e'), trunkMat=mat('aged tree bark','#493729');
+ for(const [tx,tz,sz] of [[-70,-12,1.3],[-67,16,1.1],[-61,27,1.25],[61,-22,1.4],[67,18,1.1],[57,34,1.3],[-28,58,1.4],[46,63,1.2]]){
+   cyl('old tree trunk',[tx,2.2*sz,tz],.65*sz,4.4*sz,trunkMat);
+   for(const [ox,oy,oz,scale] of [[0,5,0,3.2],[-1.1,4.3,.3,2.4],[1.1,4.5,-.4,2.5],[0,6.1,.2,2.4]]){
+     const crown=B.MeshBuilder.CreateSphere('leaf canopy',{diameter:scale*sz,segments:7},scene);
+     crown.position.set(tx+ox*sz,oy*sz,tz+oz*sz);crown.material=treeMat;crown.checkCollisions=true;crown.receiveShadows=true;shadow.addShadowCaster(crown);
+   }
+ }
+ for(let i=0;i<22;i++){
+   const px=-55+(i*37%110),pz=-48+(i*23%96);
+   if(Math.abs(px)<22&&Math.abs(pz)<24)continue;
+   const barrel=cyl('street barrel',[px,.55,pz],.85,1.1,dark);
+   for(let y of [.25,.82])cyl('barrel iron hoop',[px,y,pz],.9,.09,iron);
+   if(i%3===0){box('wooden handcart bed',[px+1,.65,pz+1],[2.3,.25,1.4],dark,false);for(let side of [-1,1])cyl('cart wheel',[px+1+side*1.1,.65,pz+1.7],1.05,.18,leather);}
+ }
  // lamps, banners and street clutter
  for(let x=-4;x<=4;x++)for(let z=-3;z<=2;z++){
    if((x+z)%2===0){const px=x*17+7,pz=z*17+6;if(pz<43){cyl('lamp post',[px,2.3,pz],.16,4.6,iron);box('lantern',[px,4.5,pz],[.65,.75,.65],gold,false);}}
@@ -215,8 +242,6 @@ try {
    return {root,armL,armR,legL,legR,phase:Math.random()*6.28,alive:true,weapon:blade};
  }
  const player=person('Matej Varga',0,8,blue,1,'hero');player.root.position.y=0;
- const hood=B.MeshBuilder.CreateSphere('Matej dark hood',{diameter:.62,segments:16},scene);hood.parent=player.root;hood.position.set(0,2.43,.12);hood.scaling.set(1,.9,.9);hood.material=leather;shadow.addShadowCaster(hood);
- const cloak=B.MeshBuilder.CreateBox('Matej travelling cloak',{width:.78,height:1.2,depth:.16},scene);cloak.parent=player.root;cloak.position.set(0,1.28,.29);cloak.material=blue;cloak.rotation.x=-.08;shadow.addShadowCaster(cloak);
  // Collision capsule proxy; visible rig follows proxy
  const collider=B.MeshBuilder.CreateCapsule('player collision',{height:2.2,radius:.42},scene);
  collider.isVisible=false;collider.checkCollisions=true;collider.ellipsoid=new B.Vector3(.48,1.05,.48);collider.ellipsoidOffset=new B.Vector3(0,1.05,0);collider.position.set(0,0,8);
@@ -227,7 +252,7 @@ try {
  shadow.addShadowCaster(collider);ground.receiveShadows=true;
  // UI / state
  let started=false,paused=false,hp=100,alert=0,objective=0,dialogueUntil=0,attackUntil=0,jumpVelocity=0,onGround=true,stealth=false,sprinting=false;
- let yaw=Math.PI, pitch=.12,moveX=0,moveY=0,lookX=0,lookY=0,lastTime=performance.now(),toastUntil=0,combo=0,lastAttack=0,cameraDistance=7.4;
+ let yaw=Math.PI, pitch=.12,moveX=0,moveY=0,lookX=0,lookY=0,lastTime=performance.now(),toastUntil=0,combo=0,lastAttack=0,cameraDistance=9.2;
  const toast=t=>{$('toast').textContent=t;toastUntil=performance.now()+2600;};
  const updateUI=()=>{$('hp').style.width=hp+'%';$('alert').textContent='POZORNOSŤ STRÁŽÍ: '+(alert>70?'VYSOKÁ':alert>25?'ZVÝŠENÁ':'NÍZKA');$('objective').textContent=['Nájdi Annu pri rybnom trhu.','Získaj od Anny zapečatený list.','Dostaň sa k mestskému archívu.','Strias prenasledovateľov a unikni.'][objective]||'Kapitola dokončená';};
  updateUI();
@@ -297,7 +322,7 @@ try {
    const speed=stealth?1.65:(sprinting||keys.ShiftLeft||keys.ShiftRight?7.8:4.5);
    const forward=new B.Vector3(Math.sin(yaw),0,Math.cos(yaw)),right=new B.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
    const delta=forward.scale(iy*speed*dt).add(right.scale(ix*speed*dt));
-   if(mag>.08){collider.moveWithCollisions(delta);player.root.rotation.y=Math.atan2(delta.x,delta.z)+Math.PI;player.phase+=dt*(sprinting?13:8);player.legL.rotation.x=Math.sin(player.phase)*.65;player.legR.rotation.x=-Math.sin(player.phase)*.65;player.armL.rotation.x=-Math.sin(player.phase)*.45;player.armR.rotation.x=Math.sin(player.phase)*.45;}else{player.legL.rotation.x*=.8;player.legR.rotation.x*=.8;player.armL.rotation.x*=.8;player.armR.rotation.x*=.8;}
+   if(mag>.08){collider.moveWithCollisions(delta);player.root.rotation.y=Math.atan2(delta.x,delta.z)+Math.PI;player.phase+=dt*(sprinting?11:7);player.legL.rotation.x=Math.sin(player.phase)*.48;player.legR.rotation.x=-Math.sin(player.phase)*.48;player.armL.rotation.x=-Math.sin(player.phase)*.28;player.armR.rotation.x=Math.sin(player.phase)*.28;player.root.position.y+=Math.abs(Math.sin(player.phase*2))*(sprinting?.055:.025);}else{player.legL.rotation.x*=.72;player.legR.rotation.x*=.72;player.armL.rotation.x*=.72;player.armR.rotation.x*=.72;player.root.position.y=B.Scalar.Lerp(player.root.position.y,collider.position.y,.22);}
    jumpVelocity-=18*dt;collider.moveWithCollisions(new B.Vector3(0,jumpVelocity*dt,0));if(collider.position.y<=0){collider.position.y=0;jumpVelocity=0;onGround=true;}else onGround=false;
    player.root.position.copyFrom(collider.position);player.root.position.y=collider.position.y;
    // Guards investigate and pursue when visible / noisy
@@ -309,7 +334,7 @@ try {
    const desired=player.root.position.add(new B.Vector3(-Math.sin(yaw)*distance,elev,-Math.cos(yaw)*distance));
    camera.position=B.Vector3.Lerp(camera.position,desired,1-Math.pow(.0008,dt));
    camera.setTarget(player.root.position.add(new B.Vector3(0,1.58,0)));
-   const camOrigin=player.root.position.add(new B.Vector3(0,1.5,0));const camDir=camera.position.subtract(camOrigin).normalize();const camRay=new B.Ray(camOrigin,camDir,cameraDistance+1);const camHit=scene.pickWithRay(camRay,m=>m.checkCollisions&&m!==collider&&!m.name.includes('player'));if(camHit&&camHit.hit&&camHit.distance<cameraDistance)camera.position=B.Vector3.Lerp(camera.position,camOrigin.add(camDir.scale(Math.max(1.8,camHit.distance-.45))),.35);
+   const camOrigin=player.root.position.add(new B.Vector3(0,1.5,0));const camDir=camera.position.subtract(camOrigin).normalize();const camRay=new B.Ray(camOrigin,camDir,cameraDistance+1);const camHit=scene.pickWithRay(camRay,m=>m.checkCollisions&&m!==collider&&!m.name.includes('player'));if(camHit&&camHit.hit&&camHit.distance<cameraDistance)camera.position=B.Vector3.Lerp(camera.position,camOrigin.add(camDir.scale(Math.max(4.6,camHit.distance-.7))),.22);
    if(performance.now()>toastUntil)$('toast').textContent='';
    if(hp<=0){hp=100;alert=0;collider.position.set(0,0,8);toast('Matej sa vrátil na bezpečné miesto.');}
  }
@@ -319,7 +344,7 @@ try {
  for(let i=0;i<8;i++){const x=-28+i*8,z=-24;const flame=B.MeshBuilder.CreateSphere('torch glow',{diameter:.42,segments:8},scene);flame.position.set(x,3.7,z);const fm=new B.StandardMaterial('torch glow mat '+i,scene);fm.emissiveColor=new B.Color3(1,.42,.12);fm.disableLighting=true;flame.material=fm;const light=new B.PointLight('torch light '+i,new B.Vector3(x,3.7,z),scene);light.diffuse=new B.Color3(1,.48,.19);light.intensity=.55;light.range=11;}
  const sky=B.MeshBuilder.CreateSphere('sky dome',{diameter:420,segments:24},scene);sky.isPickable=false;sky.infiniteDistance=true;sky.material=new B.StandardMaterial('sky material',scene);sky.material.backFaceCulling=false;sky.material.disableLighting=true;sky.material.emissiveColor=new B.Color3(.18,.25,.29);sky.material.alpha=.18;
  // Add shadows to all static architecture
- scene.meshes.forEach(m=>{if(m.checkCollisions&&m!==ground&&m!==collider)shadow.addShadowCaster(m);});
+ if(!matchMedia('(pointer:coarse)').matches)scene.meshes.forEach(m=>{if(m.checkCollisions&&m!==ground&&m!==collider)shadow.addShadowCaster(m);});
  window.addEventListener('resize',()=>engine.resize());
  window.addEventListener('contextmenu',e=>e.preventDefault());
  setStatus('Svet Prešporka bol úspešne načítaný.');
