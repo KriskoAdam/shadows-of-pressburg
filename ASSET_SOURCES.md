@@ -14,3 +14,7 @@ The game loads the following individual GLB models from 3DAssets.dev. The source
 - Town Wall Segment: https://3dassets.dev/assets/medieval-mmo-starter-realm-town-wall-segment-09028049
 
 All listed assets are loaded from their permanent CDN URLs at runtime. The human characters remain the game's own procedural articulated meshes; a verified rigged human model and matching animation set are still required for a major character-quality upgrade.
+
+## Character models
+
+The game loads the Gobkit Human 003 pack at runtime from `https://gobkit.com/freebies/human003/`: `PeasantMilitia.glb`, `Priestess.glb`, `KnightCaptain.glb`, `Footman.glb`, and `Scout.glb`. Verify the publisher's current license terms before redistributing the model files or using them commercially.
