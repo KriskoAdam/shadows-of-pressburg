@@ -7,6 +7,7 @@ def box(e,p,c):
  m=trimesh.creation.box(extents=e);m.apply_translation(p);return paint(m,C[c])
 def cyl(r,h,p,c,n=12):
  m=trimesh.creation.cylinder(radius=r,height=h,sections=n)
+ m.apply_transform(trimesh.transformations.rotation_matrix(math.pi/2,[1,0,0]))
  m.apply_translation(p);return paint(m,C[c])
 def sphere(r,p,c):
  m=trimesh.creation.icosphere(subdivisions=2,radius=r);m.apply_translation(p);return paint(m,C[c])
