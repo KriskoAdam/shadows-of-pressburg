@@ -42,8 +42,13 @@ p=[cyl(.32,4.8,(0,2.4,0),'trunk',10)]
 for pos,r,c in [((0,5,0),2.1,'leaf'),((-1.1,4.5,.3),1.5,'leaf2'),((1.15,4.7,-.2),1.55,'leaf'),((0,6.2,.2),1.55,'leaf2'),((-.3,5.6,-1),1.25,'leaf')]: p.append(sphere(r,pos,c))
 export("pressburg_tree",p)
 # Barrels and handcart
-p=[cyl(.48,1.2,(0,.65,0),'timber',16)]
-for y in [.2,.55,1.0]: p.append(cyl(.51,.07,(0,y,0),'iron',16))
+p=[cyl(.34,.88,(0,.47,0),'timber',20)]
+for y in [.18,.48,.76]: p.append(cyl(.355,.045,(0,y,0),'iron',20))
+for a in np.linspace(0,2*math.pi,12,endpoint=False):
+ x,z=.342*math.cos(a),.342*math.sin(a)
+ stave=box((.055,.84,.035),(x,.47,z),'leather')
+ stave.apply_transform(trimesh.transformations.rotation_matrix(a,[0,1,0],point=[x,.47,z]))
+ p.append(stave)
 export("oak_barrel",p)
 p=[box((2.5,.35,1.5),(0,1,0),'timber'),box((2.3,.5,1.3),(0,1.4,0),'plaster'),box((2.8,.16,.16),(0,.7,0),'iron')]
 for x in [-1.25,1.25]:
