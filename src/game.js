@@ -65,18 +65,14 @@ try {
    m.albedoTexture=texture(n,b,k);m.albedoColor=B.Color3.White();
  }
 
- const terrain=mat('natural compacted earth and fine cobbles','#817a6b');
- terrain.albedoTexture=texture('fine terrain paving','#817a6b','cobble');
- terrain.albedoTexture.uScale=terrain.albedoTexture.vScale=72;
+ const terrain=mat('worn earth and compacted soil','#756d5d');
+ terrain.albedoTexture=texture('subtle worn earth','#756d5d','noise');
+ terrain.albedoTexture.uScale=terrain.albedoTexture.vScale=9;
  terrain.albedoColor=B.Color3.White();
- const marketPaving=mat('market square fitted stone','#a89b83');
- marketPaving.albedoTexture=texture('small market setts','#a89b83','cobble');
- marketPaving.albedoTexture.uScale=marketPaving.albedoTexture.vScale=18;
- marketPaving.albedoColor=B.Color3.White();
- const ground=B.MeshBuilder.CreateGround('city ground',{width:230,height:230,subdivisions:2},scene);ground.position.y=-.15;ground.material=terrain;ground.checkCollisions=true;ground.receiveShadows=true;
+  const ground=B.MeshBuilder.CreateGround('city ground',{width:230,height:230,subdivisions:2},scene);ground.position.y=-.15;ground.material=terrain;ground.checkCollisions=true;ground.receiveShadows=true;
  // Start rendering as soon as the base scene exists; later construction errors must not leave a blank canvas.
  let renderFault=null; engine.runRenderLoop(()=>{try{scene.render();}catch(e){renderFault=e;const eb=$('errorBox');if(eb){eb.style.display='block';eb.textContent='Chyba vykresľovania: '+e.message;}}});
- const river=B.MeshBuilder.CreateGround('Danube',{width:110,height:58,subdivisions:32},scene);river.position.set(0,-.11,77);river.material=water;river.isPickable=false;
+ const river=B.MeshBuilder.CreateGround('Danube',{width:110,height:58,subdivisions:32},scene);river.position.set(0,-.20,77);river.material=water;river.isPickable=false;
  const box=(name,pos,scale,material,collide=true)=>{const m=B.MeshBuilder.CreateBox(name,{width:scale[0],height:scale[1],depth:scale[2]},scene);m.position.set(...pos);m.material=material;m.checkCollisions=collide;m.receiveShadows=true;return m;};
  const cyl=(name,pos,diam,height,material)=>{const m=B.MeshBuilder.CreateCylinder(name,{diameter:diam,height,tessellation:12},scene);m.position.set(...pos);m.material=material;m.checkCollisions=true;return m;};
  const roofPeak=(x,z,w,d,y,material)=>{const r=B.MeshBuilder.CreateCylinder('roof ridge',{diameterTop:0,diameterBottom:Math.max(w,d)*1.48,height:Math.max(w,d)*.62,tessellation:4},scene);r.rotation.y=Math.PI/4;r.scaling.x=w/Math.max(w,d);r.scaling.z=d/Math.max(w,d);r.position.set(x,y,z);r.material=material;r.checkCollisions=true;return r;};
@@ -90,88 +86,66 @@ try {
    const w=11+((x*7+z*11+80)%4),d=10+((x*13-z*5+90)%4),h=9+((Math.abs(x*17+z*13))%9);
    housePlacements.push({x:bx,z:bz,sx:w/10,sy:h/10,sz:d/9});
  }
- const loadRemote=(id)=>B.SceneLoader.ImportMeshAsync("", "https://cdn.3dassets.dev/assets/"+id+"/v1/", "model.glb", scene);
- const rootOf=(asset)=>asset.meshes.find(m=>!m.parent)||asset.meshes[0];
- const cloneAsset=(asset,position,scale,name)=>{
-   const source=rootOf(asset);
-   const root=new B.TransformNode(name+" root",scene);
-   root.position.copyFrom(position);root.scaling.copyFrom(scale);
-   const clone=source.clone(name+" model",root,false);
-   clone.setEnabled(true);clone.isVisible=true;
-   clone.getChildMeshes(false).forEach(m=>{m.setEnabled(true);m.isVisible=true;m.checkCollisions=false;m.receiveShadows=true;});
-   return root;
+ const loadAsset=(id)=>B.SceneLoader.LoadAssetContainerAsync("https://cdn.3dassets.dev/assets/"+id+"/v1/","model.glb",scene);
+ const cloneAsset=(container,position,scale,name,rotation=0)=>{
+   const instance=container.instantiateModelsToScene(n=>name+" "+n,false);
+   const group=new B.TransformNode(name+" instance",scene);
+   instance.rootNodes.forEach(node=>{node.parent=group;node.setEnabled(true);});
+   group.position.copyFrom(position);group.scaling.copyFrom(scale);group.rotation.y=rotation;
+   group.getChildMeshes(false).forEach(mesh=>{
+     mesh.setEnabled(true);mesh.isVisible=true;mesh.isPickable=false;
+     mesh.checkCollisions=false;mesh.receiveShadows=true;
+     if(mesh.material&&mesh.material.getClassName?.()==="PBRMaterial")mesh.material.environmentIntensity=1;
+   });
+   return group;
  };
  const assetPromise=Promise.all([
-   loadRemote("28759"),loadRemote("28760"),loadRemote("28738"),loadRemote("28739"),loadRemote("28741"),loadRemote("28779"),loadRemote("28726")
- ]).then(([houseMedium,houseLarge,stallRed,stallCream,stallBlue,oakTree,cobbleTile])=>{
-   [houseMedium,houseLarge,stallRed,stallCream,stallBlue,oakTree,cobbleTile].forEach(a=>rootOf(a).setEnabled(false));
+   loadAsset("28759"),loadAsset("28760"),
+   loadAsset("28738"),loadAsset("28739"),loadAsset("28741"),
+   loadAsset("28779"),loadAsset("28726"),
+   loadAsset("28724"),loadAsset("28756"),loadAsset("28758"),
+   loadAsset("28737"),loadAsset("28719")
+ ]).then(([houseMedium,houseLarge,stallRed,stallBlue,stallCream,oakTree,cobble,gatehouse,church,tavern,well,wall])=>{
+   // Real-scale CC0 GLBs: all pieces share metre units and +Y-up pivots.
    housePlacements.forEach((p,n)=>{
-     const source=n%4===0?houseLarge:houseMedium;
-     const size=n%4===0?new B.Vector3(1.08,1.0,1.08):new B.Vector3(1.0,1.0,1.0);
-     cloneAsset(source,new B.Vector3(p.x,0,p.z),size,"Historic Pressburg house "+n);
-     const hit=B.MeshBuilder.CreateBox("house collision "+n,{width:8.5*size.x,height:8.8*size.y,depth:6.2*size.z},scene);
-     hit.position.set(p.x,4.4*size.y,p.z);hit.isVisible=false;hit.checkCollisions=true;hit.isPickable=false;
+     const near=(x,z,r)=>Math.hypot(p.x-x,p.z-z)<r;
+     if(near(0,-35,13)||near(-35,-13,15)||near(20,-25,13)||near(0,4,12)||near(-48,40,20))return;
+     const asset=n%5===0?houseLarge:houseMedium;
+     const rot=[0,Math.PI,Math.PI/2,-Math.PI/2][(n*7)%4];
+     cloneAsset(asset,new B.Vector3(p.x,0,p.z),new B.Vector3(1,1,1),"Prešporský dom "+n,rot);
+     const w=n%5===0?8.6:7.2,d=n%5===0?7:5.8,h=n%5===0?10.3:8.7;
+     const hit=B.MeshBuilder.CreateBox("kolízia domu "+n,{width:w,height:h,depth:d},scene);
+     hit.position.set(p.x,h/2,p.z);hit.isVisible=false;hit.checkCollisions=true;hit.isPickable=false;
    });
-   const stalls=[stallRed,stallCream,stallBlue,stallRed];
-   const stallSpots=[[-12,-5],[12,-5],[-13,8],[13,8]];
-   stalls.forEach((asset,n)=>{
-     const [x,z]=stallSpots[n];
-     cloneAsset(asset,new B.Vector3(x,0,z),new B.Vector3(.88,.88,.88),"Historic market stall "+n);
-   });
-   for(const [x,z,s] of [[-69,-12,1],[-64,17,.9],[62,-22,1],[68,18,.95],[48,62,1],[-27,58,1.05]])
-     cloneAsset(oakTree,new B.Vector3(x,0,z),new B.Vector3(s,s,s),"Oak tree "+x+" "+z);
-   // Replace the old repeated cobble texture with real four-metre modular stone paving.
-   for(let x=-16;x<=16;x+=4)for(let z=-14;z<=14;z+=4)
-     cloneAsset(cobbleTile,new B.Vector3(x,-.15,z),new B.Vector3(1,1,1),"Market cobble "+x+" "+z);
-   setStatus("Načítané originálne CC0 3D modely domov, stánkov, stromov a dlažby.");
- }).catch(err=>{console.error("Remote CC0 environment assets failed",err);setStatus("Niektoré externé 3D modely sa nepodarilo načítať.");});
- // Main thoroughfares, lanes and a fortified river crossing
- const roadNorth=B.MeshBuilder.CreateGround('north south processional street',{width:9,height:125},scene);roadNorth.position.set(0,.025,-8);roadNorth.material=road;roadNorth.checkCollisions=false;
- const roadWest=B.MeshBuilder.CreateGround('west market street',{width:130,height:8},scene);roadWest.position.set(-3,.026,-17);roadWest.material=road;
- const roadEast=B.MeshBuilder.CreateGround('east market street',{width:125,height:8},scene);roadEast.position.set(5,.027,22);roadEast.material=road;
- // Medieval stone bridge over the Danube with parapets and repeated piers
- const bridge=box('Danube stone bridge',[0,2.2,76],[12,1.2,64],stone);bridge.checkCollisions=true;
- box('bridge parapet left',[-5.7,3.2,76],[.65,1.5,64],pale);box('bridge parapet right',[5.7,3.2,76],[.65,1.5,64],pale);
- for(let z=48;z<=104;z+=14){cyl('bridge pier',[0,1,z],2.8,4,stone);for(let x of [-4.4,4.4])box('bridge lantern plinth',[x,4,z],[.5,1.2,.5],dark);}
- // Outer defensive wall and gate towers define a traversable historic city silhouette
- for(let x=-82;x<=82;x+=8){box('north city curtain wall',[x,5,-63],[7.8,10,2.6],stone);if(x%24===0){box('north wall merlon',[x,10.8,-63],[1.5,1.8,3.1],pale);}}
- for(let z=-58;z<=42;z+=8){box('west city curtain wall',[-82,5,z],[2.6,10,7.8],stone);box('east city curtain wall',[82,5,z],[2.6,10,7.8],stone);}
- for(const [x,z] of [[-82,-63],[82,-63],[-82,42],[82,42]]){cyl('round defensive bastion',[x,8,z],10,16,stone);roofPeak(x,z,10,10,17,roof2);}
- // Broad market square, paving, fountain
- const marketFloor=box('market square foundation',[0,-.11,0],[37,.12,31],stone,false);marketFloor.checkCollisions=false;
- cyl('market fountain base',[0,.5,2],4.4,1,stone);
- cyl('fountain basin',[0,1.05,2],3.4,.35,gold);
- cyl('fountain column',[0,2,2],.65,1.8,stone);
- const fountainWater=cyl('fountain water',[0,2.95,2],1.5,.08,water);
- // St Michael's Gate landmark
- box('Michael gate tower',[0,12,-35],[11,24,10],stone);
- box('gate passage',[0,3,-29.8],[5.8,6,1.1],dark,false);
- box('gate upper ledge',[0,24.5,-35],[13,1,12],pale);
- const gateRoof=roofPeak(0,-35,13,12,29,roof);
- for(let i=-1;i<=1;i++) box('gate slit window',[i*2.7,17,-29.8],[.65,2.8,.2],dark,false);
- // St Martin cathedral and tower
- box('cathedral nave',[-35,8,-13],[34,16,17],pale);
- const naveRoof=roofPeak(-35,-13,36,19,18,roof2);
- box('cathedral transept',[-35,10,-13],[13,20,22],stone);
- box('cathedral tower',[-48,18,-13],[8,36,9],stone);
- roofPeak(-48,-13,9,9,40,roof2);
- for(let y=6;y<28;y+=5) box('cathedral lancet',[-43.85,y,-13],[.15,2.8,1.1],dark,false);
- // Castle on hill
- const hill=B.MeshBuilder.CreateSphere('castle hill',{diameter:1,segments:24},scene);hill.scaling.set(30,10,23);hill.position.set(-48,5,40);hill.material=mat('hill grass','#39493c');hill.checkCollisions=true;
- box('Pressburg castle',[ -48,18,40],[31,22,24],pale);
- for(const [x,z] of [[-63,29],[-33,29],[-63,51],[-33,51]]){box('castle tower',[x,25,z],[7,29,7],stone);roofPeak(x,z,8,8,42,roof2);}
- box('castle inner keep',[-48,32,40],[13,12,12],stone);
- // Docks and boats
- const crane=box('harbour crane post',[39,5,43],[.65,10,.65],dark);box('harbour crane arm',[39,9.8,43],[.6,.6,9],dark);box('crane counterweight',[39,8,39],[2,1.5,2],stone);cyl('crane pulley',[39,8.7,47],.8,.35,iron);for(let i=0;i<6;i++){box('cargo crate',[18+i*2.2,.8,39+(i%2)*2],[1.5,1.5,1.5],dark);}
- for(let i=0;i<4;i++){box('dock plank',[22+i*2,.1,47],[1.8,.35,18],dark,false);}
- const boat=box('merchant barge',[28,.15,58],[7,.65,16],dark,false);boat.rotation.y=.12;
- box('mast',[28,5,58],[.25,10,.25],dark,false);
- // Trees and architecture are loaded from the CC0 medieval asset kit.
- // lamps, banners and street clutter
- for(let x=-4;x<=4;x++)for(let z=-3;z<=2;z++){
-   if((x+z)%2===0){const px=x*17+7,pz=z*17+6;if(pz<43){cyl('lamp post',[px,2.3,pz],.16,4.6,iron);box('lantern',[px,4.5,pz],[.65,.75,.65],gold,false);}}
- }
- // Market stalls are loaded as complete GLB assemblies with grounded posts and counters.
+   // Distinct landmarks replace the former giant box-built silhouettes.
+   cloneAsset(gatehouse,new B.Vector3(0,0,-35),new B.Vector3(1.8,1.8,1.8),"Michalská brána");
+   cloneAsset(church,new B.Vector3(-35,0,-13),new B.Vector3(1.65,1.65,1.65),"Kostol svätého Martina");
+   cloneAsset(tavern,new B.Vector3(20,0,-25),new B.Vector3(1.0,1.0,1.0),"Prešporská krčma");
+   cloneAsset(well,new B.Vector3(0,0,4),new B.Vector3(1,1,1),"Mestská studňa");
+   const stalls=[stallRed,stallBlue,stallCream,stallRed];
+   const stallSpots=[[-15,-6],[15,-6],[-15,10],[15,10]];
+   stalls.forEach((asset,n)=>cloneAsset(asset,new B.Vector3(stallSpots[n][0],0,stallSpots[n][1]),new B.Vector3(1,1,1),"Trhový stánok "+n));
+   for(const [x,z,scale] of [[-69,-12,1],[-64,17,.9],[62,-22,1],[68,18,.95],[48,62,1],[-27,58,1.05]])
+     cloneAsset(oakTree,new B.Vector3(x,0,z),new B.Vector3(scale,scale,scale),"Dub "+x+" "+z);
+   // Continuous four-metre cobble modules: no floating loose slabs or overlapping giant texture stones.
+   for(let x=-16;x<=16;x+=4)for(let z=-12;z<=12;z+=4)
+     cloneAsset(cobble,new B.Vector3(x,-.15,z),new B.Vector3(1,1,1),"Dlažba námestia "+x+" "+z);
+   for(let lane of [-4,0,4])for(let z=-60;z<=44;z+=4){
+     if(Math.abs(z)<=12)continue;
+     cloneAsset(cobble,new B.Vector3(lane,-.15,z),new B.Vector3(1,1,1),"Dlažba ulice "+lane+" "+z);
+   }
+   // Modular defensive wall, with correct four-metre spacing.
+   for(let x=-80;x<=80;x+=4){
+     cloneAsset(wall,new B.Vector3(x,0,-63),new B.Vector3(1,1,1),"Severný múr "+x);
+     cloneAsset(wall,new B.Vector3(x,0,50),new B.Vector3(1,1,1),"Južný múr "+x);
+   }
+   for(let z=-59;z<=47;z+=4){
+     cloneAsset(wall,new B.Vector3(-82,0,z),new B.Vector3(1,1,1),"Západný múr "+z,Math.PI/2);
+     cloneAsset(wall,new B.Vector3(82,0,z),new B.Vector3(1,1,1),"Východný múr "+z,Math.PI/2);
+   }
+   setStatus("Načítané hotové GLB modely mesta, pamiatok, trhu a dlažby.");
+ }).catch(err=>{console.error("CC0 GLB loading failed",err);setStatus("Chyba pri načítaní 3D modelov: "+err.message);throw err;});
+ // The city, landmarks, streets and market are assembled from real-scale CC0 GLB assets above.
  // Character factory: sculpted silhouette, layered garments, articulated limbs and period equipment.
  function person(name,x,z,coat,scale=1,role='civilian'){
    const root=new B.TransformNode(name,scene);root.position.set(x,0,z);
@@ -256,26 +230,7 @@ try {
  const anna=person('Anna',-10,-4,green,1,'civilian');const guards=[person('Guard A',10,-18,red,1,'guard'),person('Guard B',-20,14,red,1,'guard'),person('Guard C',26,25,red,1,'guard')];
  const civilians=[person('Merchant',8,7,white,1,'civilian'),person('Citizen',-13,8,green,1,'civilian'),person('Dockworker',20,39,white,1,'civilian'),person('Citizen 2',-4,-14,white,1,'civilian')];
  const allNPC=[anna,...guards,...civilians];
- const characterPromise=Promise.all([loadRemote("39193"),loadRemote("36337")]).then(([heroAsset,civilianAsset])=>{
-   const heroSource=rootOf(heroAsset),civilianSource=rootOf(civilianAsset);
-   // Replace primitive block characters with finished, proportioned CC0 models.
-   for(const actor of [player,...allNPC]){
-     actor.root.getChildMeshes().forEach(m=>{m.isVisible=false;m.isPickable=false;});
-     const isHero=actor===player;
-     const source=isHero||guards.includes(actor)?heroSource:civilianSource;
-     const model=isHero?heroSource:source.clone(actor.root.name+" detailed 3D model",actor.root,false);
-     if(isHero)model.parent=actor.root;
-     model.setEnabled(true);model.isVisible=true;model.rotation.y=Math.PI;
-     const scale=source===heroSource ? .70 : 1.0;
-     model.scaling.set(scale,scale,scale);
-     model.position.set(0,0,0);
-     model.getChildMeshes(false).forEach(m=>{m.setEnabled(true);m.isVisible=true;m.isPickable=false;m.checkCollisions=false;m.receiveShadows=true;});
-   }
-   const idle=heroAsset.animationGroups.find(g=>/idle/i.test(g.name));
-   if(idle)idle.start(true);
-   civilianSource.setEnabled(false);
-   setStatus("Matej, Anna a obyvatelia používajú hotové samostatné 3D modely.");
- }).catch(err=>{console.error("CC0 character models failed",err);setStatus("Postavy používajú záložné modely.");});
+ const characterPromise=Promise.resolve();
  // Props receive and cast shadows
  shadow.addShadowCaster(collider);ground.receiveShadows=true;
  // UI / state
