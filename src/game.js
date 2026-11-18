@@ -14,10 +14,11 @@ if (!window.BABYLON) {
 function boot(){
 try {
  const B=window.BABYLON;
+ const COARSE=matchMedia('(pointer:coarse)').matches;
  // Gobkit character rigs face local +Z, matching the movement vector.
  const RIG_YAW=0;
- const engine=new B.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,adaptToDeviceRatio:true});
- engine.setHardwareScalingLevel(1/(window.devicePixelRatio||1));
+ const engine=new B.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,adaptToDeviceRatio:false});
+ engine.setHardwareScalingLevel(COARSE?1.2:1/Math.min(window.devicePixelRatio||1,2));
  const scene=new B.Scene(engine);
  scene.clearColor=new B.Color4(.48,.56,.59,1);
  scene.collisionsEnabled=true;
@@ -28,7 +29,7 @@ try {
  camera.minZ=.2; camera.maxZ=450; camera.fov=.74; camera.inputs.clear();
  const cinematic=new B.DefaultRenderingPipeline('pressburgCinematic',true,scene,[camera]);
  cinematic.fxaaEnabled=true;cinematic.samples=1;
- cinematic.bloomEnabled=true;cinematic.bloomThreshold=.82;cinematic.bloomWeight=matchMedia('(pointer:coarse)').matches ? .08 : .16;cinematic.bloomKernel=48;
+ cinematic.bloomEnabled=!COARSE;cinematic.bloomThreshold=.82;cinematic.bloomWeight=COARSE?.06:.14;cinematic.bloomKernel=COARSE?24:48;
  scene.imageProcessingConfiguration.toneMappingEnabled=true;
  scene.imageProcessingConfiguration.toneMappingType=B.ImageProcessingConfiguration.TONEMAPPING_ACES;
  scene.imageProcessingConfiguration.exposure=1.05;scene.imageProcessingConfiguration.contrast=1.12;
@@ -36,7 +37,7 @@ try {
  hemi.intensity=.68; hemi.groundColor=new B.Color3(.24,.20,.16);
  const sun=new B.DirectionalLight('lateSun',new B.Vector3(-.45,-1,.35),scene);
  sun.position=new B.Vector3(65,90,-55); sun.intensity=2.0;
- const shadow=new B.ShadowGenerator(matchMedia('(pointer:coarse)').matches?1024:2048,sun); shadow.useBlurExponentialShadowMap=true; shadow.blurKernel=28; shadow.bias=.0005;
+ const shadow=new B.ShadowGenerator(COARSE?1024:2048,sun); shadow.useBlurExponentialShadowMap=true; shadow.blurKernel=COARSE?12:28; shadow.bias=.0005;
  const mat=(name,color,rough=.9,metal=0)=>{const m=new B.PBRMaterial(name,scene);m.albedoColor=B.Color3.FromHexString(color);m.roughness=rough;m.metallic=metal;return m;};
  const stone=mat('warm limestone','#938575'), pale=mat('aged plaster','#c0ae91'), dark=mat('timber','#49382b'), roof=mat('terracotta','#70483a'), roof2=mat('slate','#454b4d'), road=mat('cobblestone','#55534e'), water=mat('Danube','#263f48',.24,.25), iron=mat('forged iron','#343b3b',.42,.65), gold=mat('aged brass','#b18a4c',.3,.7), cloth=mat('traveller wool','#273d43'), skin=mat('skin','#b98968'), white=mat('linen','#d8cdb7'), red=mat('guard livery','#743b32'), green=mat('merchant green','#53634b'), leather=mat('dark leather','#30251f',.78), steel=mat('tempered steel','#9ba5a4',.24,.82), blue=mat('indigo cloth','#283c55');
  // Procedural tile surfaces replace flat colour blocks with masonry, plaster, roof slate and worn cobbles.
