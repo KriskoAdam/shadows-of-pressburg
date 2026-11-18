@@ -267,7 +267,7 @@ try {
      const instance=container.instantiateModelsToScene(n=>label+" "+n,true);
      const holder=new B.TransformNode(label+" rig root",scene);
      instance.rootNodes.forEach(node=>{node.parent=holder;node.setEnabled(true);});
-     holder.parent=actor.root;holder.position.set(0,0,0);holder.rotation.y=0;holder.scaling.set(1,1,1);
+     holder.parent=actor.root;holder.position.set(0,0,0);holder.rotation.y=Math.PI;holder.scaling.set(1,1,1);
      holder.getChildMeshes(false).forEach(m=>{
        m.setEnabled(true);m.isVisible=true;m.isPickable=false;m.checkCollisions=false;
        m.receiveShadows=true;shadow.addShadowCaster(m);
@@ -346,7 +346,7 @@ try {
  function attack(){const now=performance.now();if(now<attackUntil)return;combo=now-lastAttack<850?(combo%3)+1:1;lastAttack=now;attackUntil=now+820;if(player.visual)playRigClip(player,'attack',false);else player.armR.rotation.x=-1.1-combo*.18;player.armR.rotation.z=combo===2?-.65:.35;setTimeout(()=>{player.armR.rotation.x=0;player.armR.rotation.z=0;if(player.visual&&player.currentClip?.name.toLowerCase().includes('attack'))playRigClip(player,'idle',true);},620);let target=null,best=3.7;for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(player.root.position,g.root.position);if(dist<best){const to=g.root.position.subtract(player.root.position);const facing=new B.Vector3(Math.sin(player.root.rotation.y),0,Math.cos(player.root.rotation.y));if(B.Vector3.Dot(to.normalize(),facing)>.05){target=g;best=dist;}}}if(target){target.alive=false;if(target.visual)playRigClip(target,'death',false);setTimeout(()=>target.root.setEnabled(false),850);toast(['','Zásah mečom.','Druhý úder komba.','Dokončovací úder.'][combo]);if(objective===3)alert=Math.max(0,alert-25);}else toast('Meč zasvišťal naprázdno.');}
  function interact(){if(B.Vector3.Distance(player.root.position,anna.root.position)<4){if(objective===0){objective=1;toast('Anna: „List je ukrytý. Vezmi si ho.“');}else if(objective===1){objective=2;toast('Získal si zapečatený list. Zamier k archívu.');}else toast('Anna: „Ponáhľaj sa, stráže sú blízko.“');updateUI();return;}if(objective===2&&B.Vector3.Distance(player.root.position,new B.Vector3(0,0,-35))<12){objective=3;toast('Archív je otvorený. Stráže ťa spozorovali!');alert=65;updateUI();return;}toast('V blízkosti nie je nič na preskúmanie.');}
  function climb(){if(!onGround){jumpVelocity=5.8;toast('Výstup');}else{jumpVelocity=5.8;onGround=false;}}
- function dodge(){const dir=new B.Vector3(Math.sin(yaw),0,-Math.cos(yaw));collider.moveWithCollisions(dir.scale(-3.8));}
+ function dodge(){const dir=new B.Vector3(Math.sin(yaw),0,-Math.cos(yaw));collider.moveWithCollisions(dir.scale(3.8));}
  bindAction('jump',jump);bindAction('attack',attack);bindAction('interact',interact);bindAction('climb',climb);bindAction('dodge',dodge);bindAction('stealth',()=>{stealth=!stealth;toast(stealth?'Plíženie aktivované':'Plíženie vypnuté');});
  const sprintButton=$('sprint');if(sprintButton){sprintButton.addEventListener('pointerdown',e=>{e.preventDefault();sprinting=true;sprintButton.setPointerCapture(e.pointerId);});const stopSprint=()=>sprinting=false;sprintButton.addEventListener('pointerup',stopSprint);sprintButton.addEventListener('pointercancel',stopSprint);sprintButton.addEventListener('lostpointercapture',stopSprint);}
  $('pause').addEventListener('click',pauseGame);$('resume').addEventListener('click',()=>{paused=false;$('pauseScreen').style.display='none';$('pause').style.display='block';lastTime=performance.now();});
