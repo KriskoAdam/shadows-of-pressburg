@@ -231,21 +231,21 @@ try {
  const civilians=[person('Merchant',8,7,white,1,'civilian'),person('Citizen',-13,8,green,1,'civilian'),person('Dockworker',20,39,white,1,'civilian'),person('Citizen 2',-4,-14,white,1,'civilian')];
  const allNPC=[anna,...guards,...civilians];
  const loadCharacter=(file)=>B.SceneLoader.LoadAssetContainerAsync("https://gobkit.com/freebies/human003/",file,scene);
+ const playRigClip=(actor,name,loop=true)=>{
+   if(!actor.rigAnimations?.length)return;
+   const key=name.toLowerCase();
+   const chosen=actor.rigAnimations.find(g=>g.name.toLowerCase()===key)
+     ||actor.rigAnimations.find(g=>g.name.toLowerCase().includes(key));
+   if(!chosen||actor.currentClip===chosen)return;
+   actor.rigAnimations.forEach(g=>g.stop());
+   chosen.start(loop);
+   actor.currentClip=chosen;
+ };
  const characterPromise=Promise.all([
    loadCharacter("PeasantMilitia.glb"),
    loadCharacter("Priestess.glb"),
    loadCharacter("KnightCaptain.glb")
  ]).then(([heroPack,annaPack,guardPack])=>{
-   const animate=(actor,name,loop=true)=>{
-     if(!actor.rigAnimations?.length)return;
-     const key=name.toLowerCase();
-     const chosen=actor.rigAnimations.find(g=>g.name.toLowerCase()===key)
-       ||actor.rigAnimations.find(g=>g.name.toLowerCase().includes(key));
-     if(!chosen||actor.currentClip===chosen)return;
-     actor.rigAnimations.forEach(g=>g.stop());
-     chosen.start(loop,1.0,chosen.from,chosen.to);
-     actor.currentClip=chosen;
-   };
    const attach=(actor,container,label)=>{
      actor.root.getChildMeshes().forEach(m=>{m.isVisible=false;m.isPickable=false;});
      const instance=container.instantiateModelsToScene(n=>label+" "+n,true);
@@ -257,7 +257,7 @@ try {
        m.receiveShadows=true;shadow.addShadowCaster(m);
      });
      actor.visual=holder;actor.rigAnimations=instance.animationGroups;actor.currentClip=null;
-     animate(actor,"idle",true);
+     playRigClip(actor,"idle",true);
    };
    attach(player,heroPack,"Matej Varga");
    attach(anna,annaPack,"Anna");
@@ -310,7 +310,7 @@ try {
  const endLook=e=>{if(e.pointerId===lookPointer){lookPointer=null;lastLook=null;}};lookZone.addEventListener('pointerup',endLook);lookZone.addEventListener('pointercancel',endLook);
  function bindAction(id,fn){const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(started&&!paused)fn();});}
  function jump(){if(onGround){jumpVelocity=7.3;onGround=false;}}
- function attack(){const now=performance.now();if(now<attackUntil)return;combo=now-lastAttack<850?(combo%3)+1:1;lastAttack=now;attackUntil=now+420;player.armR.rotation.x=-1.1-combo*.18;player.armR.rotation.z=combo===2?-.65:.35;setTimeout(()=>{player.armR.rotation.x=0;player.armR.rotation.z=0;},230);let target=null,best=3.7;for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(player.root.position,g.root.position);if(dist<best){const to=g.root.position.subtract(player.root.position);const facing=new B.Vector3(Math.sin(player.root.rotation.y),0,Math.cos(player.root.rotation.y));if(B.Vector3.Dot(to.normalize(),facing)>.05){target=g;best=dist;}}}if(target){target.alive=false;target.root.setEnabled(false);toast(['','Zásah mečom.','Druhý úder komba.','Dokončovací úder.'][combo]);if(objective===3)alert=Math.max(0,alert-25);}else toast('Meč zasvišťal naprázdno.');}
+ function attack(){const now=performance.now();if(now<attackUntil)return;combo=now-lastAttack<850?(combo%3)+1:1;lastAttack=now;attackUntil=now+420;if(player.visual)playRigClip(player,'attack',false);else player.armR.rotation.x=-1.1-combo*.18;player.armR.rotation.z=combo===2?-.65:.35;setTimeout(()=>{player.armR.rotation.x=0;player.armR.rotation.z=0;},230);let target=null,best=3.7;for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(player.root.position,g.root.position);if(dist<best){const to=g.root.position.subtract(player.root.position);const facing=new B.Vector3(Math.sin(player.root.rotation.y),0,Math.cos(player.root.rotation.y));if(B.Vector3.Dot(to.normalize(),facing)>.05){target=g;best=dist;}}}if(target){target.alive=false;target.root.setEnabled(false);toast(['','Zásah mečom.','Druhý úder komba.','Dokončovací úder.'][combo]);if(objective===3)alert=Math.max(0,alert-25);}else toast('Meč zasvišťal naprázdno.');}
  function interact(){if(B.Vector3.Distance(player.root.position,anna.root.position)<4){if(objective===0){objective=1;toast('Anna: „List je ukrytý. Vezmi si ho.“');}else if(objective===1){objective=2;toast('Získal si zapečatený list. Zamier k archívu.');}else toast('Anna: „Ponáhľaj sa, stráže sú blízko.“');updateUI();return;}if(objective===2&&B.Vector3.Distance(player.root.position,new B.Vector3(0,0,-35))<12){objective=3;toast('Archív je otvorený. Stráže ťa spozorovali!');alert=65;updateUI();return;}toast('V blízkosti nie je nič na preskúmanie.');}
  function climb(){if(!onGround){jumpVelocity=5.8;toast('Výstup');}else{jumpVelocity=5.8;onGround=false;}}
  function dodge(){const dir=new B.Vector3(Math.sin(yaw),0,-Math.cos(yaw));collider.moveWithCollisions(dir.scale(-3.8));}
@@ -343,11 +343,11 @@ try {
    const speed=stealth?1.65:(sprinting||keys.ShiftLeft||keys.ShiftRight?7.8:4.5);
    const forward=new B.Vector3(Math.sin(yaw),0,-Math.cos(yaw)),right=new B.Vector3(-Math.cos(yaw),0,-Math.sin(yaw));
    const delta=forward.scale(iy*speed*dt).add(right.scale(ix*speed*dt));
-   if(mag>.08){collider.moveWithCollisions(delta);if(player.visual)player.rigAnimations&&(()=>{const clip=sprinting||stealth?'run':'walk';if(player.currentClip?.name.toLowerCase()!==clip) {player.rigAnimations.forEach(g=>g.stop());const next=player.rigAnimations.find(g=>g.name.toLowerCase()===clip);if(next){next.start(true);player.currentClip=next;}}})();player.root.rotation.y=Math.atan2(delta.x,delta.z)+(player.visual?0:Math.PI);player.phase+=dt*(sprinting?11:7);player.legL.rotation.x=Math.sin(player.phase)*.48;player.legR.rotation.x=-Math.sin(player.phase)*.48;player.armL.rotation.x=-Math.sin(player.phase)*.28;player.armR.rotation.x=Math.sin(player.phase)*.28;player.root.position.y+=Math.abs(Math.sin(player.phase*2))*(sprinting ? .055 : .025);}else{if(player.visual&&player.currentClip?.name.toLowerCase()!=='idle'){player.rigAnimations?.forEach(g=>g.stop());const idle=player.rigAnimations?.find(g=>g.name.toLowerCase()==='idle');if(idle){idle.start(true);player.currentClip=idle;}}player.legL.rotation.x*=.72;player.legR.rotation.x*=.72;player.armL.rotation.x*=.72;player.armR.rotation.x*=.72;player.root.position.y=B.Scalar.Lerp(player.root.position.y,collider.position.y,.22);}
+   if(mag>.08){collider.moveWithCollisions(delta);if(player.visual)player.rigAnimations&&(()=>{const clip=sprinting?'run':'walk';playRigClip(player,clip,true);})();player.root.rotation.y=Math.atan2(delta.x,delta.z)+(player.visual?0:Math.PI);player.phase+=dt*(sprinting?11:7);player.legL.rotation.x=Math.sin(player.phase)*.48;player.legR.rotation.x=-Math.sin(player.phase)*.48;player.armL.rotation.x=-Math.sin(player.phase)*.28;player.armR.rotation.x=Math.sin(player.phase)*.28;player.root.position.y+=Math.abs(Math.sin(player.phase*2))*(sprinting ? .055 : .025);}else{if(player.visual)playRigClip(player,'idle',true);player.legL.rotation.x*=.72;player.legR.rotation.x*=.72;player.armL.rotation.x*=.72;player.armR.rotation.x*=.72;player.root.position.y=B.Scalar.Lerp(player.root.position.y,collider.position.y,.22);}
    jumpVelocity-=18*dt;collider.moveWithCollisions(new B.Vector3(0,jumpVelocity*dt,0));if(collider.position.y<=0){collider.position.y=0;jumpVelocity=0;onGround=true;}else onGround=false;
    player.root.position.copyFrom(collider.position);player.root.position.y=collider.position.y;
    // Guards investigate and pursue when visible / noisy
-   for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(g.root.position,player.root.position);if(dist<17&&(!stealth||dist<6)){if(g.visual&&g.currentClip?.name.toLowerCase()!=='walk'){g.rigAnimations?.forEach(a=>a.stop());const walk=g.rigAnimations?.find(a=>a.name.toLowerCase()==='walk');if(walk){walk.start(true);g.currentClip=walk;}}alert=Math.min(100,alert+dt*(dist<7?28:9));const d=player.root.position.subtract(g.root.position);d.y=0;d.normalize();g.root.position.addInPlace(d.scale(dt*(dist<4?1.8:2.7)));g.root.rotation.y=Math.atan2(d.x,d.z);if(dist<1.8&&t%900<dt*1000){hp=Math.max(0,hp-7);$('hp').style.width=hp+'%';}}else{if(g.visual&&g.currentClip?.name.toLowerCase()!=='idle'){g.rigAnimations?.forEach(a=>a.stop());const idle=g.rigAnimations?.find(a=>a.name.toLowerCase()==='idle');if(idle){idle.start(true);g.currentClip=idle;}}g.root.position.x+=Math.sin(t*.0003+g.phase)*dt*.25;}}
+   for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(g.root.position,player.root.position);if(dist<17&&(!stealth||dist<6)){if(g.visual)playRigClip(g,'walk',true);alert=Math.min(100,alert+dt*(dist<7?28:9));const d=player.root.position.subtract(g.root.position);d.y=0;d.normalize();g.root.position.addInPlace(d.scale(dt*(dist<4?1.8:2.7)));g.root.rotation.y=Math.atan2(d.x,d.z);if(dist<1.8&&t%900<dt*1000){hp=Math.max(0,hp-7);$('hp').style.width=hp+'%';}}else{if(g.visual)playRigClip(g,'idle',true);g.root.position.x+=Math.sin(t*.0003+g.phase)*dt*.25;}}
    if(!gp?.buttons[4]?.pressed&&gp)stealth=false;if(!gp?.buttons[5]?.pressed&&!gp?.buttons[7]?.pressed&&gp)sprinting=false;
    if(alert>0)alert=Math.max(0,alert-dt*(stealth?8:2.4));updateUI();updateMap();
    // Camera behind character; pitch controls elevation
