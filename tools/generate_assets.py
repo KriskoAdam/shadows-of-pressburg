@@ -6,7 +6,9 @@ def paint(m,c): m.visual.vertex_colors=np.tile(np.array(c,dtype=np.uint8),(len(m
 def box(e,p,c):
  m=trimesh.creation.box(extents=e);m.apply_translation(p);return paint(m,C[c])
 def cyl(r,h,p,c,n=12):
- m=trimesh.creation.cylinder(radius=r,height=h,sections=n);m.apply_translation(p);return paint(m,C[c])
+ m=trimesh.creation.cylinder(radius=r,height=h,sections=n)
+ m.apply_transform(trimesh.transformations.rotation_matrix(math.pi/2,[1,0,0]))
+ m.apply_translation(p);return paint(m,C[c])
 def sphere(r,p,c):
  m=trimesh.creation.icosphere(subdivisions=2,radius=r);m.apply_translation(p);return paint(m,C[c])
 def export(name,parts):
@@ -42,11 +44,11 @@ p=[cyl(.32,4.8,(0,2.4,0),'trunk',10)]
 for pos,r,c in [((0,5,0),2.1,'leaf'),((-1.1,4.5,.3),1.5,'leaf2'),((1.15,4.7,-.2),1.55,'leaf'),((0,6.2,.2),1.55,'leaf2'),((-.3,5.6,-1),1.25,'leaf')]: p.append(sphere(r,pos,c))
 export("pressburg_tree",p)
 # Barrels and handcart
-p=[cyl(.34,.88,(0,.47,0),'timber',20)]
-for y in [.18,.48,.76]: p.append(cyl(.355,.045,(0,y,0),'iron',20))
-for a in np.linspace(0,2*math.pi,12,endpoint=False):
+p=[cyl(.34,.88,(0,.47,0),'timber',24)]
+for y in [.18,.47,.76]: p.append(cyl(.355,.035,(0,y,0),'iron',24))
+for a in np.linspace(0,2*math.pi,20,endpoint=False):
  x,z=.342*math.cos(a),.342*math.sin(a)
- stave=box((.055,.84,.035),(x,.47,z),'leather')
+ stave=box((.045,.84,.028),(x,.47,z),'timber')
  stave.apply_transform(trimesh.transformations.rotation_matrix(a,[0,1,0],point=[x,.47,z]))
  p.append(stave)
 export("oak_barrel",p)
