@@ -131,7 +131,7 @@ try {
      cloneAsset(cobble,new B.Vector3(x,-.10,z),new B.Vector3(1,1,1),"Dlažba námestia "+x+" "+z);
    for(const [x,z] of [[-8,-10],[8,-10],[-18,4],[18,4],[-12,18],[12,18]])
      cloneAsset(barrel,new B.Vector3(x,-.03,z),new B.Vector3(1,1,1),"Dubový sud "+x+" "+z);
-   cloneAsset(cart,new B.Vector3(-21,0,7),new B.Vector3(1,1,1),"Drevený voz");
+   cloneAsset(cart,new B.Vector3(-21,-.06,7),new B.Vector3(1,1,1),"Drevený voz");
    for(let x=-80;x<=80;x+=4){
      cloneAsset(wall,new B.Vector3(x,0,-63),new B.Vector3(1,1,1),"Severný múr "+x);
      cloneAsset(wall,new B.Vector3(x,0,50),new B.Vector3(1,1,1),"Južný múr "+x);
@@ -263,6 +263,8 @@ try {
    const attach=(actor,container,label)=>{
      // Keep the known-good articulated fallback visible until the imported rig is measured and validated.
      const instance=container.instantiateModelsToScene(n=>label+" "+n,true);
+     const prunePreviewNodes=node=>node.getChildren().forEach(child=>{if(/preview|thumbnail|miniature|icon|sample/i.test(child.name)){child.dispose(false,false);return;}prunePreviewNodes(child);});
+     instance.rootNodes.forEach(prunePreviewNodes);
      // Filter separate miniature preview roots bundled with some character packs.
      const measured=instance.rootNodes.map(node=>{
        node.computeWorldMatrix(true);
@@ -271,7 +273,7 @@ try {
      });
      const largest=Math.max(...measured.map(x=>x.height).filter(Number.isFinite));
      if(!Number.isFinite(largest)||largest<.25||largest>20)throw new Error(label+" invalid source rig bounds: "+largest);
-     const validRoots=measured.filter(x=>x.height>=largest*.72&&!/preview|thumbnail|miniature|icon|lod/i.test(x.node.name));
+     const validRoots=measured.filter(x=>x.height>=largest*.72&&!/preview|thumbnail|miniature|icon|sample/i.test(x.node.name));
      if(!validRoots.length)validRoots.push(measured.find(x=>x.height===largest));
      actor.root.scaling.setAll(1);
      const holder=new B.TransformNode(label+" rig root",scene);
