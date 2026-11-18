@@ -124,12 +124,12 @@ try {
    for(const [x,z,rot] of [[-15,-6,0],[15,-6,0],[-15,10,Math.PI],[15,10,Math.PI]])
      cloneAsset(stall,new B.Vector3(x,0,z),new B.Vector3(1,1,1),"Trhový stánok "+x+" "+z,rot);
    for(const [x,z,k] of [[-69,-12,1],[-64,17,.9],[62,-22,1],[68,18,.95],[48,62,1.05],[-27,58,1.05]])
-     cloneAsset(tree,new B.Vector3(x,-2.1,z),new B.Vector3(k,k,k),"Dub "+x+" "+z);
+     cloneAsset(tree,new B.Vector3(x,0,z),new B.Vector3(k,k,k),"Dub "+x+" "+z);
    // Dense but light modular cobbles; each GLB is a single merged mesh.
    for(let x=-20;x<=20;x+=4)for(let z=-16;z<=16;z+=4)
      cloneAsset(cobble,new B.Vector3(x,-.10,z),new B.Vector3(1,1,1),"Dlažba námestia "+x+" "+z);
    for(const [x,z] of [[-8,-10],[8,-10],[-18,4],[18,4],[-12,18],[12,18]])
-     cloneAsset(barrel,new B.Vector3(x,.31,z),new B.Vector3(1,1,1),"Dubový sud "+x+" "+z);
+     cloneAsset(barrel,new B.Vector3(x,-.03,z),new B.Vector3(1,1,1),"Dubový sud "+x+" "+z);
    cloneAsset(cart,new B.Vector3(-21,0,7),new B.Vector3(1,1,1),"Drevený voz");
    for(let x=-80;x<=80;x+=4){
      cloneAsset(wall,new B.Vector3(x,0,-63),new B.Vector3(1,1,1),"Severný múr "+x);
