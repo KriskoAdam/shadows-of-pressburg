@@ -230,13 +230,27 @@ try {
  const anna=person('Anna',-10,-4,green,1,'civilian');const guards=[person('Guard A',10,-18,red,1,'guard'),person('Guard B',-20,14,red,1,'guard'),person('Guard C',26,25,red,1,'guard')];
  const civilians=[person('Merchant',8,7,white,1,'civilian'),person('Citizen',-13,8,green,1,'civilian'),person('Dockworker',20,39,white,1,'civilian'),person('Citizen 2',-4,-14,white,1,'civilian')];
  const allNPC=[anna,...guards,...civilians];
+ // Deliberate market-square staging: NPCs must be visible from the initial spawn.
+ anna.root.position.set(0,0,22);
+ guards[0].root.position.set(-13,0,28);guards[1].root.position.set(13,0,29);guards[2].root.position.set(0,0,39);
+ civilians[0].root.position.set(-7,0,17);civilians[1].root.position.set(7,0,18);
+ civilians[2].root.position.set(-10,0,34);civilians[3].root.position.set(10,0,35);
+
  const loadCharacter=(file)=>B.SceneLoader.LoadAssetContainerAsync("https://gobkit.com/freebies/human003/",file,scene);
  const playRigClip=(actor,name,loop=true)=>{
    if(!actor.rigAnimations?.length)return;
    const key=name.toLowerCase();
+   const aliases={
+     idle:/idle|stand|breath|wait/i,
+     walk:/walk|walking|move/i,
+     run:/run|sprint|jog/i,
+     attack:/attack|slash|sword|combat/i,
+     death:/death|die|fall/i
+   };
    const chosen=actor.rigAnimations.find(g=>g.name.toLowerCase()===key)
-     ||actor.rigAnimations.find(g=>g.name.toLowerCase().includes(key));
-   if(!chosen||actor.currentClip===chosen)return;
+     ||actor.rigAnimations.find(g=>(aliases[key]||new RegExp(key,'i')).test(g.name));
+   if(!chosen){if(actor.currentClip)return;const fallback=actor.rigAnimations[0];if(!fallback)return;fallback.start(loop);actor.currentClip=fallback;return;}
+   if(actor.currentClip===chosen)return;
    actor.rigAnimations.forEach(g=>g.stop());
    chosen.start(loop);
    actor.currentClip=chosen;
@@ -249,7 +263,7 @@ try {
    loadCharacter("Scout.glb")
  ]).then(([heroPack,annaPack,guardPack,footmanPack,scoutPack])=>{
    const attach=(actor,container,label)=>{
-     actor.root.getChildMeshes().forEach(m=>{m.isVisible=false;m.isPickable=false;});
+     // Keep the known-good articulated fallback visible until the imported rig is measured and validated.
      const instance=container.instantiateModelsToScene(n=>label+" "+n,true);
      const holder=new B.TransformNode(label+" rig root",scene);
      instance.rootNodes.forEach(node=>{node.parent=holder;node.setEnabled(true);});
@@ -258,17 +272,34 @@ try {
        m.setEnabled(true);m.isVisible=true;m.isPickable=false;m.checkCollisions=false;
        m.receiveShadows=true;shadow.addShadowCaster(m);
      });
+     holder.computeWorldMatrix(true);
+     let bounds=holder.getHierarchyBoundingVectors(true);
+     let height=bounds.max.y-bounds.min.y;
+     if(!Number.isFinite(height)||height<.25||height>20)throw new Error(label+" invalid model height: "+height);
+     // All characters are normalized to a consistent human height of 1.82 metres.
+     const factor=1.82/height;
+     holder.scaling.scaleInPlace(factor);
+     holder.computeWorldMatrix(true);
+     bounds=holder.getHierarchyBoundingVectors(true);
+     holder.position.y-=bounds.min.y;
+     holder.computeWorldMatrix(true);
+     actor.root.getChildMeshes().forEach(m=>{m.isVisible=false;m.isPickable=false;});
      actor.visual=holder;actor.rigAnimations=instance.animationGroups;actor.currentClip=null;
+     actor.rigHeight=1.82;actor.rigLabel=label;
      playRigClip(actor,"idle",true);
    };
    attach(player,heroPack,"Matej Varga");
    attach(anna,annaPack,"Anna");
    guards.forEach((g,i)=>attach(g,guardPack,"Mestská stráž "+(i+1)));
    civilians.forEach((c,i)=>attach(c,i%2===0?footmanPack:scoutPack,"Obyvateľ "+(i+1)));
-   setStatus("Načítané rigované postavy: Matej, Anna, stráže a rozmanití obyvatelia.");
+   setStatus("Načítaných "+(1+allNPC.length)+" rigovaných postáv v jednotnej mierke.");
  }).catch(err=>{
    console.error("Rigged character models failed",err);
-   setStatus("3D postavy sa nepodarilo načítať: "+err.message);
+   // Never hide fallback characters when an external model or animation pack fails.
+   allNPC.concat([player]).forEach(actor=>{
+     if(!actor.visual)actor.root.getChildMeshes().forEach(m=>{m.isVisible=true;m.isPickable=false;});
+   });
+   setStatus("Používajú sa záložné postavy: "+err.message);
  });
 
  // Props receive and cast shadows
