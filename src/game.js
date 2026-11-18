@@ -258,23 +258,24 @@ try {
  const allNPC=[anna,...guards,...civilians];
  const characterPromise=Promise.all([loadRemote("39193"),loadRemote("36337")]).then(([heroAsset,civilianAsset])=>{
    const heroSource=rootOf(heroAsset),civilianSource=rootOf(civilianAsset);
-   // Replace every primitive block character with a finished, proportioned CC0 model.
+   // Replace primitive block characters with finished, proportioned CC0 models.
    for(const actor of [player,...allNPC]){
      actor.root.getChildMeshes().forEach(m=>{m.isVisible=false;m.isPickable=false;});
-     const source=actor===player||guards.includes(actor)?heroSource:civilianSource;
-     const model=source.clone(actor.root.name+" detailed 3D model",actor.root,false);
+     const isHero=actor===player;
+     const source=isHero||guards.includes(actor)?heroSource:civilianSource;
+     const model=isHero?heroSource:source.clone(actor.root.name+" detailed 3D model",actor.root,false);
+     if(isHero)model.parent=actor.root;
      model.setEnabled(true);model.isVisible=true;model.rotation.y=Math.PI;
-     const scale=source===heroSource?.70:1.0;
+     const scale=source===heroSource ? .70 : 1.0;
      model.scaling.set(scale,scale,scale);
      model.position.set(0,0,0);
      model.getChildMeshes(false).forEach(m=>{m.setEnabled(true);m.isVisible=true;m.isPickable=false;m.checkCollisions=false;m.receiveShadows=true;});
    }
    const idle=heroAsset.animationGroups.find(g=>/idle/i.test(g.name));
    if(idle)idle.start(true);
-   heroSource.setEnabled(false);civilianSource.setEnabled(false);
-   setStatus("Matej, Anna a obyvatelia používajú samostatné hotové 3D modely.");
+   civilianSource.setEnabled(false);
+   setStatus("Matej, Anna a obyvatelia používajú hotové samostatné 3D modely.");
  }).catch(err=>{console.error("CC0 character models failed",err);setStatus("Postavy používajú záložné modely.");});
-
  // Props receive and cast shadows
  shadow.addShadowCaster(collider);ground.receiveShadows=true;
  // UI / state
