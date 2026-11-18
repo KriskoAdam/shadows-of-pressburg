@@ -221,7 +221,7 @@ try {
      boxPart(name+' heraldic chest plate',root,[0,1.58,-.31],[.24,.32,.06],gold);
    }
    root.getChildMeshes().forEach(m=>m.scaling.scaleInPlace(scale));
-   return {root,armL,armR,legL,legR,phase:Math.random()*6.28,alive:true,weapon:blade};
+   return {root,armL,armR,legL,legR,fallbackMeshes:root.getChildMeshes(),phase:Math.random()*6.28,alive:true,weapon:blade};
  }
  const player=person('Matej Varga',0,8,blue,1,'hero');player.root.position.y=0;
  // Collision capsule proxy; visible rig follows proxy
@@ -283,7 +283,7 @@ try {
      bounds=holder.getHierarchyBoundingVectors(true);
      holder.position.y-=bounds.min.y;
      holder.computeWorldMatrix(true);
-     actor.root.getChildMeshes(true).forEach(m=>{m.isVisible=false;m.isPickable=false;});
+     actor.fallbackMeshes.forEach(m=>{m.isVisible=false;m.isPickable=false;});
      actor.visual=holder;actor.rigAnimations=instance.animationGroups;actor.currentClip=null;
      actor.rigHeight=1.82;actor.rigLabel=label;
      playRigClip(actor,"idle",true);
@@ -297,7 +297,7 @@ try {
    console.error("Rigged character models failed",err);
    // Never hide fallback characters when an external model or animation pack fails.
    allNPC.concat([player]).forEach(actor=>{
-     if(!actor.visual)actor.root.getChildMeshes(true).forEach(m=>{m.isVisible=true;m.isPickable=false;});
+     if(!actor.visual)actor.fallbackMeshes.forEach(m=>{m.isVisible=true;m.isPickable=false;});
    });
    setStatus("Používajú sa záložné postavy: "+err.message);
  });
@@ -376,11 +376,11 @@ try {
    const speed=stealth?1.65:(sprinting||keys.ShiftLeft||keys.ShiftRight?7.8:4.5);
    const forward=new B.Vector3(Math.sin(yaw),0,-Math.cos(yaw)),right=new B.Vector3(-Math.cos(yaw),0,-Math.sin(yaw));
    const delta=forward.scale(iy*speed*dt).add(right.scale(ix*speed*dt));
-   if(mag>.08){collider.moveWithCollisions(delta);if(player.visual&&t>attackUntil)playRigClip(player,sprinting?'run':'walk',true);player.root.rotation.y=Math.atan2(delta.x,delta.z)+(player.visual?0:Math.PI);player.phase+=dt*(sprinting?11:7);player.legL.rotation.x=Math.sin(player.phase)*.48;player.legR.rotation.x=-Math.sin(player.phase)*.48;player.armL.rotation.x=-Math.sin(player.phase)*.28;player.armR.rotation.x=Math.sin(player.phase)*.28;player.root.position.y+=Math.abs(Math.sin(player.phase*2))*(sprinting ? .055 : .025);}else{if(player.visual&&t>attackUntil)playRigClip(player,'idle',true);player.legL.rotation.x*=.72;player.legR.rotation.x*=.72;player.armL.rotation.x*=.72;player.armR.rotation.x*=.72;player.root.position.y=B.Scalar.Lerp(player.root.position.y,collider.position.y,.22);}
+   if(mag>.08){collider.moveWithCollisions(delta);if(player.visual&&t>attackUntil)playRigClip(player,sprinting?'run':'walk',true);player.root.rotation.y=Math.atan2(delta.x,delta.z)+Math.PI;player.phase+=dt*(sprinting?11:7);player.legL.rotation.x=Math.sin(player.phase)*.48;player.legR.rotation.x=-Math.sin(player.phase)*.48;player.armL.rotation.x=-Math.sin(player.phase)*.28;player.armR.rotation.x=Math.sin(player.phase)*.28;player.root.position.y+=Math.abs(Math.sin(player.phase*2))*(sprinting ? .055 : .025);}else{if(player.visual&&t>attackUntil)playRigClip(player,'idle',true);player.legL.rotation.x*=.72;player.legR.rotation.x*=.72;player.armL.rotation.x*=.72;player.armR.rotation.x*=.72;player.root.position.y=B.Scalar.Lerp(player.root.position.y,collider.position.y,.22);}
    jumpVelocity-=18*dt;collider.moveWithCollisions(new B.Vector3(0,jumpVelocity*dt,0));if(collider.position.y<=0){collider.position.y=0;jumpVelocity=0;onGround=true;}else onGround=false;
    player.root.position.copyFrom(collider.position);player.root.position.y=collider.position.y;
    // Guards investigate and pursue when visible / noisy
-   for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(g.root.position,player.root.position);if(dist<17&&(!stealth||dist<6)){if(g.visual&&dist>=1.8)playRigClip(g,'walk',true);alert=Math.min(100,alert+dt*(dist<7?28:9));const d=player.root.position.subtract(g.root.position);d.y=0;d.normalize();g.root.position.addInPlace(d.scale(dt*(dist<4?1.8:2.7)));g.root.rotation.y=Math.atan2(d.x,d.z);if(dist<1.8&&t>(g.nextAttackAt||0)){g.nextAttackAt=t+1050;if(g.visual)playRigClip(g,'attack',false);hp=Math.max(0,hp-7);$('hp').style.width=hp+'%';}}else{if(g.visual)playRigClip(g,'idle',true);g.root.position.x+=Math.sin(t*.0003+g.phase)*dt*.25;}}
+   for(const g of guards){if(!g.alive)continue;const dist=B.Vector3.Distance(g.root.position,player.root.position);if(dist<17&&(!stealth||dist<6)){if(g.visual&&dist>=1.8)playRigClip(g,'walk',true);alert=Math.min(100,alert+dt*(dist<7?28:9));const d=player.root.position.subtract(g.root.position);d.y=0;d.normalize();g.root.position.addInPlace(d.scale(dt*(dist<4?1.8:2.7)));g.root.rotation.y=Math.atan2(d.x,d.z)+Math.PI;if(dist<1.8&&t>(g.nextAttackAt||0)){g.nextAttackAt=t+1050;if(g.visual)playRigClip(g,'attack',false);hp=Math.max(0,hp-7);$('hp').style.width=hp+'%';}}else{if(g.visual)playRigClip(g,'idle',true);g.root.position.x+=Math.sin(t*.0003+g.phase)*dt*.25;}}
    if(!gp?.buttons[4]?.pressed&&gp)stealth=false;if(!gp?.buttons[5]?.pressed&&!gp?.buttons[7]?.pressed&&gp)sprinting=false;
    if(alert>0)alert=Math.max(0,alert-dt*(stealth?8:2.4));updateUI();updateMap();
    // Camera behind character; pitch controls elevation
