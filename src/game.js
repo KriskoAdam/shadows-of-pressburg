@@ -111,10 +111,10 @@ try {
      hit.position.set(p.x,3.7*p.sy,p.z);hit.isVisible=false;hit.checkCollisions=true;hit.isPickable=false;
    });
    for(const [x,z,rot] of [[-12,-5,0],[12,-5,Math.PI],[ -13,8,.2],[13,8,-.2]])
-     {const o=cloneAsset(stalls,new B.Vector3(x,0,z),new B.Vector3(1,1,1),"Market stall");o.rotation.y=rot;}
+     {const o=cloneAsset(stalls,new B.Vector3(x,0,z),new B.Vector3(.78,.78,.78),"Market stall");o.rotation.y=rot;}
    for(const [x,z,s] of [[-69,-12,1.2],[-64,17,1.1],[62,-22,1.2],[68,18,1.15],[48,62,1.2],[-27,58,1.25]])
      cloneAsset(trees,new B.Vector3(x,0,z),new B.Vector3(s,s,s),"Pressburg tree");
-   for(let n=0;n<12;n++)cloneAsset(barrels,new B.Vector3(-15+(n%6)*5,.0,11+Math.floor(n/6)*4),new B.Vector3(1,1,1),"Oak barrel");
+   for(const [x,z] of [[-24,18],[25,20],[31,34]])cloneAsset(barrels,new B.Vector3(x,0,z),new B.Vector3(.72,.72,.72),"Oak barrel");
    for(const [x,z] of [[-20,12],[19,13],[25,38]])cloneAsset(carts,new B.Vector3(x,0,z),new B.Vector3(1,1,1),"Merchant cart");
    setStatus("3D modely Prešporka boli načítané.");
  }).catch(err=>{console.error("GLB assets failed",err);setStatus("Používam záložné modely prostredia.");});
@@ -174,9 +174,9 @@ try {
    const boxPart=(n,parent,pos,size,material)=>mesh(n,B.MeshBuilder.CreateBox(n,{width:size[0],height:size[1],depth:size[2]},scene),parent,material,pos);
    const cylinder=(n,parent,pos,top,bottom,height,material)=>mesh(n,B.MeshBuilder.CreateCylinder(n,{diameterTop:top,diameterBottom:bottom,height,tessellation:14},scene),parent,material,pos);
    // Torso and tailored coat layers
-   cylinder(name+' shaped torso',root,[0,1.48,0],.48,.78,1.18,coat);
-   cylinder(name+' lower tunic',root,[0,.99,.015],.62,.76,.42,role==='guard'?red:blue);
-   boxPart(name+' front leather jerkin',root,[0,1.48,-.265],[.43,.78,.055],role==='guard'?iron:leather);
+   capsule(name+' tailored torso',root,[0,1.48,0],.34,1.28,coat);
+   capsule(name+' lower tunic',root,[0,1.02,.015],.34,.82,role==='guard'?red:blue);
+   if(role==='guard')boxPart(name+' front breastplate',root,[0,1.49,-.265],[.36,.58,.045],iron);
    boxPart(name+' waist belt',root,[0,1.05,-.015],[.79,.12,.52],leather);
    boxPart(name+' brass belt buckle',root,[0,1.06,-.285],[.13,.15,.045],gold);
    for(let side of [-1,1]){
@@ -213,13 +213,17 @@ try {
    for(const [side,leg] of [[-1,legL],[1,legR]]){
      capsule(name+' wool breeches',leg,[0,-.34,0],.17,.78,role==='guard'?dark:leather);
      capsule(name+' shin',leg,[0,-.72,-.015],.135,.55,dark);
-     const boot=boxPart(name+' tall boot',leg,[0,-.96,-.075],[.29,.27,.48],leather);boot.rotation.x=-.08;
-     boxPart(name+' boot cuff',leg,[0,-.82,-.015],[.3,.12,.3],role==='guard'?iron:dark);
+     const boot=capsule(name+' shaped leather boot',leg,[0,-.94,-.035],.145,.43,leather);boot.scaling.z=1.18;
+     if(role==='guard')cylinder(name+' boot cuff',leg,[0,-.82,-.015],.29,.29,.12,iron);
    }
    // Cloak, hood and equipment silhouette
-   const cloak=boxPart(name+' heavy travelling cloak',root,[0,1.31,.27],[.77,1.2,.17],role==='guard'?red:blue);cloak.rotation.x=-.08;
-   sphere(name+' hood',root,[0,2.46,.18],.59,leather).scaling.set(1,1,.78);
-   boxPart(name+' shoulder cape',root,[0,1.9,.16],[.9,.23,.4],role==='guard'?red:blue);
+   const cloak=sphere(name+' draped wool cloak',root,[0,1.32,.24],1,role==='guard'?red:blue);
+   cloak.scaling.set(.43,.82,.16);
+   cloak.rotation.x=-.08;
+   if(role==='guard'){
+     const shoulderCape=sphere(name+' shoulder mantle',root,[0,1.88,.12],1,red);
+     shoulderCape.scaling.set(.49,.19,.29);
+   }
    let blade=null;
    if(role!=='civilian'){
      const scabbard=boxPart(name+' sword scabbard',root,[.48,1.02,.19],[.13,.95,.16],leather);scabbard.rotation.z=-.28;
