@@ -132,13 +132,18 @@ try {
    for(const [x,z] of [[-8,-10],[8,-10],[-18,4],[18,4],[-12,18],[12,18]])
      cloneAsset(barrel,new B.Vector3(x,-.03,z),new B.Vector3(1,1,1),"Dubový sud "+x+" "+z);
    cloneAsset(cart,new B.Vector3(-21,-.06,7),new B.Vector3(1,1,1),"Drevený voz");
+   // Paved main streets connect the market to the northern and southern gates.
+   for(const lane of [-4,0,4])for(let z=-60;z<=44;z+=4){if(Math.abs(z)<=16)continue;cloneAsset(cobble,new B.Vector3(lane,-.10,z),new B.Vector3(1,1,1),"Dlažba hlavnej ulice "+lane+" "+z);}
+   const wallCollider=(name,x,z,rotation=0)=>{const hit=B.MeshBuilder.CreateBox(name,{width:4.15,height:4.9,depth:1.35},scene);hit.position.set(x,2.45,z);hit.rotation.y=rotation;hit.isVisible=false;hit.isPickable=false;hit.checkCollisions=true;};
    for(let x=-80;x<=80;x+=4){
      cloneAsset(wall,new B.Vector3(x,0,-63),new B.Vector3(1,1,1),"Severný múr "+x);
      cloneAsset(wall,new B.Vector3(x,0,50),new B.Vector3(1,1,1),"Južný múr "+x);
+     wallCollider("Kolízia severného múru "+x,x,-63);wallCollider("Kolízia južného múru "+x,x,50);
    }
    for(let z=-59;z<=47;z+=4){
      cloneAsset(wall,new B.Vector3(-82,0,z),new B.Vector3(1,1,1),"Západný múr "+z,Math.PI/2);
      cloneAsset(wall,new B.Vector3(82,0,z),new B.Vector3(1,1,1),"Východný múr "+z,Math.PI/2);
+     wallCollider("Kolízia západného múru "+z,-82,z,Math.PI/2);wallCollider("Kolízia východného múru "+z,82,z,Math.PI/2);
    }
    setStatus("Načítané lokálne 3D modely Prešporka, pamiatok, trhu a ulíc.");
  }).catch(err=>{console.error("Local GLB loading failed",err);setStatus("Chyba lokálnych 3D modelov: "+err.message);throw err;});
