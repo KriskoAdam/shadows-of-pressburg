@@ -283,7 +283,7 @@ try {
      bounds=holder.getHierarchyBoundingVectors(true);
      holder.position.y-=bounds.min.y;
      holder.computeWorldMatrix(true);
-     actor.root.getChildMeshes().forEach(m=>{m.isVisible=false;m.isPickable=false;});
+     actor.root.getChildMeshes(true).forEach(m=>{m.isVisible=false;m.isPickable=false;});
      actor.visual=holder;actor.rigAnimations=instance.animationGroups;actor.currentClip=null;
      actor.rigHeight=1.82;actor.rigLabel=label;
      playRigClip(actor,"idle",true);
@@ -297,7 +297,7 @@ try {
    console.error("Rigged character models failed",err);
    // Never hide fallback characters when an external model or animation pack fails.
    allNPC.concat([player]).forEach(actor=>{
-     if(!actor.visual)actor.root.getChildMeshes().forEach(m=>{m.isVisible=true;m.isPickable=false;});
+     if(!actor.visual)actor.root.getChildMeshes(true).forEach(m=>{m.isVisible=true;m.isPickable=false;});
    });
    setStatus("Používajú sa záložné postavy: "+err.message);
  });
