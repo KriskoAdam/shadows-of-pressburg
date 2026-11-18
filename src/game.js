@@ -94,8 +94,8 @@ try {
    group.position.copyFrom(position);group.scaling.copyFrom(scale);group.rotation.y=rotation;
    group.getChildMeshes(false).forEach(mesh=>{
      mesh.setEnabled(true);mesh.isVisible=true;mesh.isPickable=false;
-     mesh.checkCollisions=false;mesh.receiveShadows=true;
-     if(mesh.material&&mesh.material.getClassName?.()==="PBRMaterial")mesh.material.environmentIntensity=1;
+     mesh.checkCollisions=false;mesh.receiveShadows=true;shadow.addShadowCaster(mesh);
+     if(mesh.material&&mesh.material.getClassName?.()==="PBRMaterial"){mesh.material.environmentIntensity=1;mesh.material.roughness=Math.max(.55,mesh.material.roughness||.7);}
    });
    return group;
  };
