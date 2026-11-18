@@ -16,7 +16,7 @@ try {
  const B=window.BABYLON;
  const COARSE=matchMedia('(pointer:coarse)').matches;
  // Gobkit character rigs face local +Z, matching the movement vector.
- const RIG_YAW=0;
+ const RIG_YAW=Math.PI; // Quaternius/Gobkit humanoid rigs face local -Z; rotate to align with +Z movement.
  const engine=new B.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,adaptToDeviceRatio:false});
  engine.setHardwareScalingLevel(COARSE?1.2:1/Math.min(window.devicePixelRatio||1,2));
  const scene=new B.Scene(engine);
