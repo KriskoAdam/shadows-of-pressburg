@@ -58,3 +58,98 @@ for x in [-1.25,1.25]:
  p.append(cyl(.13,.3,(x,.8,0),'iron'))
 for z in [-.55,.55]: p.append(box((.12,.7,.12),(0,1.8,z),'timber'))
 export("wooden_cart",p)
+
+
+# Landmark and street-prop pack for the 1567 Pressburg district.
+# All models are authored in metres, Y-up, with vertex-colour materials.
+def arch_block(parts, x, y, z, sx, sy, sz, colour='stone', angle=0):
+    m=box((sx,sy,sz),(x,y,z),colour)
+    if angle:
+        m.apply_transform(trimesh.transformations.rotation_matrix(angle,[0,0,1],point=[x,y,z]))
+    parts.append(m)
+
+# Michalska Gate: open passage, twin defensive towers, crenellations and roof.
+p=[]
+p += [box((3.2,8.2,4.8),(-4.1,4.1,0),'stone'),box((3.2,8.2,4.8),(4.1,4.1,0),'stone'),
+      box((5.2,1.0,4.8),(0,8.0,0),'timber'),box((12.0,.65,6.2),(0,8.8,0),'roof2')]
+for x in [-4.1,4.1]:
+    p += [box((3.8,.45,5.2),(x,8.45,0),'gold')]
+    for z in [-1.7,0,1.7]:
+        p.append(box((.72,.8,.72),(x,9.45,z),'stone'))
+    p.append(box((3.6,.25,5.0),(x,10.0,0),'roof2'))
+p += [box((1.2,6.6,.35),(0,3.3,-2.42),'timber'),
+      box((1.0,5.8,.18),(0,3.2,-2.62),'leather')]
+for y in [1.2,2.2,3.2,4.2,5.2]:
+    p.append(box((1.0,.09,.10),(0,y,-2.74),'gold'))
+export("michalska_gate",p)
+
+# St Martin's inspired medieval church silhouette with nave, transept and bell tower.
+p=[box((13,8,20),(0,4,0),'stone'),box((14,.35,21),(0,.3,0),'timber')]
+for z in [-10.2,10.2]:
+    p.append(box((14,.3,.35),(0,7.8,z),'timber'))
+for side in [-1,1]:
+    roofm=box((14,.38,11),(0,8.2,side*4.5),'roof2')
+    roofm.apply_transform(trimesh.transformations.rotation_matrix(side*math.radians(34),[1,0,0],point=[0,8.2,side*4.5]))
+    p.append(roofm)
+# Bell tower
+p += [box((5,16,5),(-3,8, -6),'stone'),box((5.5,.4,5.5),(-3,16.2,-6),'timber'),
+      box((6,.5,6),(-3,16.6,-6),'roof2')]
+for x in [-5,-1]:
+    p.append(box((.5,2,.35),(x,13,-3.42),'glass'))
+# Buttresses and stained-glass windows
+for z in [-7,0,7]:
+    for x in [-6.65,6.65]:
+        p.append(box((.65,5,.9),(x,3.1,z),'stone'))
+for x in [-4,0,4]:
+    p += [box((1.0,2.3,.18),(x,4.7,-10.15),'glass'),
+          box((1.2,.18,.25),(x,3.45,-10.25),'gold')]
+export("st_martin_church",p)
+
+# Merchant tavern with projecting sign and chimney.
+p=[box((10,7,9),(0,3.5,0),'plaster'),box((10.5,.3,9.5),(0,.2,0),'stone')]
+for z in [-4.55,4.55]:
+    for x in [-4.7,-2.3,0,2.3,4.7]:
+        p.append(box((.22,7,.22),(x,3.6,z),'timber'))
+    for y in [1,3.5,6.8]: p.append(box((10,.22,.24),(0,y,z),'timber'))
+for side in [-1,1]:
+    m=box((11,.38,5.8),(0,7.2,side*2.5),'roof')
+    m.apply_transform(trimesh.transformations.rotation_matrix(side*math.radians(32),[1,0,0],point=[0,7.2,side*2.5]));p.append(m)
+p += [box((2.2,1.4,.28),(0,5.0,-4.75),'timber'),
+      box((1.8,.95,.12),(0,5.0,-4.93),'gold'),
+      box((1.1,2.2,1.1),(3.8,8.6,1.7),'stone'),
+      box((1.4,.25,1.4),(3.8,9.75,1.7),'roof2')]
+export("pressburg_tavern",p)
+
+# Public stone well with timber canopy and hanging pulley.
+p=[]
+for i in range(12):
+    a=2*math.pi*i/12
+    x,z=1.15*math.cos(a),1.15*math.sin(a)
+    b=box((.62,.72,.58),(x,.38,z),'stone')
+    b.apply_transform(trimesh.transformations.rotation_matrix(-a,[0,1,0],point=[x,.38,z]));p.append(b)
+for x in [-1.45,1.45]:
+    p.append(box((.18,3.6,.18),(x,2.0,0),'timber'))
+p += [box((3.5,.18,2.8),(0,3.85,0),'timber'),
+      box((3.8,.22,3.0),(0,4.05,0),'roof'),
+      cyl(.06,2.4,(0,2.7,0),'iron',10)]
+export("town_well",p)
+
+# Defensive wall segment with walkway, parapet and merlons.
+p=[box((4.0,3.8,.9),(0,1.9,0),'stone'),
+   box((4.2,.25,1.25),(0,3.95,0),'timber'),
+   box((4.2,.25,.22),(0,4.25,-.48),'stone')]
+for x in [-1.6,-.8,0,.8,1.6]:
+    p.append(box((.48,.8,.95),(x,4.45,0),'stone'))
+export("city_wall_segment",p)
+
+# Individually modelled cobble tile, with bevelled irregular stone blocks.
+p=[]
+for row in range(5):
+    for col in range(5):
+        x=-1.6+col*.8+(row%2)*.18
+        z=-1.6+row*.8
+        stone_m=trimesh.creation.box(extents=(.68,.10,.62))
+        stone_m.apply_translation((x,.02+((row*7+col*3)%3)*.006,z))
+        stone_m=paint(stone_m,['stone','plaster','roof2'][((row*3+col*5)%3)])
+        p.append(stone_m)
+export("cobble_tile",p)
