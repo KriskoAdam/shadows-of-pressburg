@@ -7,7 +7,6 @@ def box(e,p,c):
  m=trimesh.creation.box(extents=e);m.apply_translation(p);return paint(m,C[c])
 def cyl(r,h,p,c,n=12):
  m=trimesh.creation.cylinder(radius=r,height=h,sections=n)
- m.apply_transform(trimesh.transformations.rotation_matrix(math.pi/2,[1,0,0]))
  m.apply_translation(p);return paint(m,C[c])
 def sphere(r,p,c):
  m=trimesh.creation.icosphere(subdivisions=2,radius=r);m.apply_translation(p);return paint(m,C[c])
@@ -54,7 +53,7 @@ for a in np.linspace(0,2*math.pi,20,endpoint=False):
 export("oak_barrel",p)
 p=[box((2.5,.35,1.5),(0,1,0),'timber'),box((2.3,.5,1.3),(0,1.4,0),'plaster'),box((2.8,.16,.16),(0,.7,0),'iron')]
 for x in [-1.25,1.25]:
- w=trimesh.creation.torus(major_radius=.65,minor_radius=.09,major_sections=16,minor_sections=6);w.apply_transform(trimesh.transformations.rotation_matrix(math.pi/2,[0,0,1]));w.apply_translation([x,.8,0]);p.append(paint(w,C['timber']))
+ w=trimesh.creation.torus(major_radius=.65,minor_radius=.09,major_sections=16,minor_sections=6);w.apply_transform(trimesh.transformations.rotation_matrix(math.pi/2,[0,1,0]));w.apply_translation([x,.8,0]);p.append(paint(w,C['timber']))
  p.append(cyl(.13,.3,(x,.8,0),'iron'))
 for z in [-.55,.55]: p.append(box((.12,.7,.12),(0,1.8,z),'timber'))
 export("wooden_cart",p)
