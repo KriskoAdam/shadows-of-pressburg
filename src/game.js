@@ -114,8 +114,7 @@ try {
      {const o=cloneAsset(stalls,new B.Vector3(x,0,z),new B.Vector3(.78,.78,.78),"Market stall");o.rotation.y=rot;}
    for(const [x,z,s] of [[-69,-12,1.2],[-64,17,1.1],[62,-22,1.2],[68,18,1.15],[48,62,1.2],[-27,58,1.25]])
      cloneAsset(trees,new B.Vector3(x,0,z),new B.Vector3(s,s,s),"Pressburg tree");
-   for(const [x,z] of [[-24,18],[25,20],[31,34]])cloneAsset(barrels,new B.Vector3(x,0,z),new B.Vector3(.72,.72,.72),"Oak barrel");
-   for(const [x,z] of [[-20,12],[19,13],[25,38]])cloneAsset(carts,new B.Vector3(x,0,z),new B.Vector3(1,1,1),"Merchant cart");
+   for(const [x,z] of [[-28,29],[31,29]])cloneAsset(barrels,new B.Vector3(x,0,z),new B.Vector3(.68,.68,.68),"Oak barrel");
    setStatus("3D modely Prešporka boli načítané.");
  }).catch(err=>{console.error("GLB assets failed",err);setStatus("Používam záložné modely prostredia.");});
  // Main thoroughfares, lanes and a fortified river crossing
@@ -187,7 +186,7 @@ try {
    cylinder(name+' neck',root,[0,2.12,0],.19,.22,.34,skin);
    sphere(name+' head',root,[0,2.43,-.015],.49,skin);
    sphere(name+' hair crown',root,[0,2.59,.055],.51,dark);
-   boxPart(name+' hair back',root,[0,2.39,.205],[.43,.43,.22],dark);
+   const hairBack=sphere(name+' swept hair back',root,[0,2.43,.12],.48,dark);hairBack.scaling.set(.88,.88,.82);
    for(const side of [-1,1]){
      sphere(name+' ear',root,[side*.235,2.42,-.01],.12,skin);
      sphere(name+' eye white',root,[side*.105,2.46,-.235],.065,white);
@@ -195,9 +194,9 @@ try {
      const brow=boxPart(name+' eyebrow',root,[side*.105,2.53,-.255],[.12,.035,.035],dark);brow.rotation.z=side*.08;
    }
    const nose=sphere(name+' nose',root,[0,2.37,-.255],.09,skin);nose.scaling.set(.7,1.35,.7);
-   boxPart(name+' wool cap',root,[0,2.68,.015],[.58,.17,.58],role==='guard'?red:dark);
+   const woolCap=sphere(name+' wool cap',root,[0,2.68,.015],.56,role==='guard'?red:dark);woolCap.scaling.set(1,.36,1);
    cylinder(name+' cap crown',root,[0,2.77,.015],.35,.48,.15,role==='guard'?red:dark);
-   boxPart(name+' cap brim',root,[0,2.61,-.08],[.68,.055,.66],leather);
+   cylinder(name+' rounded cap brim',root,[0,2.61,-.04],.64,.64,.075,leather);
    // Shoulder joints and animated sleeves
    const armL=new B.TransformNode(name+' left arm pivot',scene);armL.parent=root;armL.position.set(-.43,1.91,0);
    const armR=new B.TransformNode(name+' right arm pivot',scene);armR.parent=root;armR.position.set(.43,1.91,0);
@@ -217,9 +216,9 @@ try {
      if(role==='guard')cylinder(name+' boot cuff',leg,[0,-.82,-.015],.29,.29,.12,iron);
    }
    // Cloak, hood and equipment silhouette
-   const cloak=sphere(name+' draped wool cloak',root,[0,1.32,.24],1,role==='guard'?red:blue);
-   cloak.scaling.set(.43,.82,.16);
-   cloak.rotation.x=-.08;
+   const cloak=capsule(name+' tailored long coat',root,[0,1.34,.19],.39,1.32,role==='guard'?red:blue);
+   cloak.scaling.set(1,.96,.58);
+   cloak.rotation.x=-.04;
    if(role==='guard'){
      const shoulderCape=sphere(name+' shoulder mantle',root,[0,1.88,.12],1,red);
      shoulderCape.scaling.set(.49,.19,.29);
