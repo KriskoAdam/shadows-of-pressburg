@@ -267,7 +267,7 @@ try {
      const instance=container.instantiateModelsToScene(n=>label+" "+n,true);
      const holder=new B.TransformNode(label+" rig root",scene);
      instance.rootNodes.forEach(node=>{node.parent=holder;node.setEnabled(true);});
-     holder.parent=actor.root;holder.position.set(0,0,0);holder.rotation.y=Math.PI;holder.scaling.set(1,1,1);
+     holder.parent=actor.root;holder.position.set(0,0,0);holder.rotation.y=0;holder.scaling.set(1,1,1);
      holder.getChildMeshes(false).forEach(m=>{
        m.setEnabled(true);m.isVisible=true;m.isPickable=false;m.checkCollisions=false;
        m.receiveShadows=true;shadow.addShadowCaster(m);
