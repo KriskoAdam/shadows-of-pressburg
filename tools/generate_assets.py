@@ -149,6 +149,6 @@ for row in range(5):
         z=-1.6+row*.8
         stone_m=trimesh.creation.box(extents=(.68,.10,.62))
         stone_m.apply_translation((x,.02+((row*7+col*3)%3)*.006,z))
-        stone_m=paint(stone_m,['stone','plaster','roof2'][((row*3+col*5)%3)])
+        stone_m=paint(stone_m,C[['stone','plaster','roof2'][((row*3+col*5)%3)]])
         p.append(stone_m)
 export("cobble_tile",p)
