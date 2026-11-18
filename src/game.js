@@ -90,33 +90,41 @@ try {
    const w=11+((x*7+z*11+80)%4),d=10+((x*13-z*5+90)%4),h=9+((Math.abs(x*17+z*13))%9);
    housePlacements.push({x:bx,z:bz,sx:w/10,sy:h/10,sz:d/9});
  }
- const loadGLB=async(file)=>B.SceneLoader.ImportMeshAsync("", "./assets/",file+".glb",scene);
+ const loadRemote=(id)=>B.SceneLoader.ImportMeshAsync("", "https://cdn.3dassets.dev/assets/"+id+"/v1/", "model.glb", scene);
+ const rootOf=(asset)=>asset.meshes.find(m=>!m.parent)||asset.meshes[0];
  const cloneAsset=(asset,position,scale,name)=>{
-   const root=new B.TransformNode(name+" root",scene);root.position.copyFrom(position);root.scaling.copyFrom(scale);
-   for(const src of asset.meshes.filter(m=>m.geometry)){
-     const clone=src.clone(name+" "+src.name,root,true);
-     clone.setEnabled(true);clone.isVisible=true;clone.checkCollisions=false;clone.receiveShadows=true;
-     if(!matchMedia('(pointer:coarse)').matches)shadow.addShadowCaster(clone);
-   }
+   const source=rootOf(asset);
+   const root=new B.TransformNode(name+" root",scene);
+   root.position.copyFrom(position);root.scaling.copyFrom(scale);
+   const clone=source.clone(name+" model",root,false);
+   clone.setEnabled(true);clone.isVisible=true;
+   clone.getChildMeshes(false).forEach(m=>{m.setEnabled(true);m.isVisible=true;m.checkCollisions=false;m.receiveShadows=true;});
    return root;
  };
  const assetPromise=Promise.all([
-   loadGLB("pressburg_house"),loadGLB("market_stall"),loadGLB("pressburg_tree"),loadGLB("oak_barrel"),loadGLB("wooden_cart")
- ]).then(([houses,stalls,trees,barrels,carts])=>{
-   houses.meshes.forEach(m=>m.setEnabled(false));stalls.meshes.forEach(m=>m.setEnabled(false));
-   trees.meshes.forEach(m=>m.setEnabled(false));barrels.meshes.forEach(m=>m.setEnabled(false));carts.meshes.forEach(m=>m.setEnabled(false));
+   loadRemote("28759"),loadRemote("28760"),loadRemote("28738"),loadRemote("28739"),loadRemote("28741"),loadRemote("28779"),loadRemote("28726")
+ ]).then(([houseMedium,houseLarge,stallRed,stallCream,stallBlue,oakTree,cobbleTile])=>{
+   [houseMedium,houseLarge,stallRed,stallCream,stallBlue,oakTree,cobbleTile].forEach(a=>rootOf(a).setEnabled(false));
    housePlacements.forEach((p,n)=>{
-     cloneAsset(houses,new B.Vector3(p.x,0,p.z),new B.Vector3(p.sx,p.sy,p.sz),"Pressburg house "+n);
-     const hit=B.MeshBuilder.CreateBox("house collision "+n,{width:9.7*p.sx,height:7.4*p.sy,depth:8.5*p.sz},scene);
-     hit.position.set(p.x,3.7*p.sy,p.z);hit.isVisible=false;hit.checkCollisions=true;hit.isPickable=false;
+     const source=n%4===0?houseLarge:houseMedium;
+     const size=n%4===0?new B.Vector3(1.08,1.0,1.08):new B.Vector3(1.0,1.0,1.0);
+     cloneAsset(source,new B.Vector3(p.x,0,p.z),size,"Historic Pressburg house "+n);
+     const hit=B.MeshBuilder.CreateBox("house collision "+n,{width:8.5*size.x,height:8.8*size.y,depth:6.2*size.z},scene);
+     hit.position.set(p.x,4.4*size.y,p.z);hit.isVisible=false;hit.checkCollisions=true;hit.isPickable=false;
    });
-   for(const [x,z,rot] of [[-12,-5,0],[12,-5,Math.PI],[ -13,8,.2],[13,8,-.2]])
-     {const o=cloneAsset(stalls,new B.Vector3(x,0,z),new B.Vector3(.78,.78,.78),"Market stall");o.rotation.y=rot;}
-   for(const [x,z,s] of [[-69,-12,1.2],[-64,17,1.1],[62,-22,1.2],[68,18,1.15],[48,62,1.2],[-27,58,1.25]])
-     cloneAsset(trees,new B.Vector3(x,0,z),new B.Vector3(s,s,s),"Pressburg tree");
-   for(const [x,z] of [[-28,29],[31,29]])cloneAsset(barrels,new B.Vector3(x,0,z),new B.Vector3(.68,.68,.68),"Oak barrel");
-   setStatus("3D modely Prešporka boli načítané.");
- }).catch(err=>{console.error("GLB assets failed",err);setStatus("Používam záložné modely prostredia.");});
+   const stalls=[stallRed,stallCream,stallBlue,stallRed];
+   const stallSpots=[[-12,-5],[12,-5],[-13,8],[13,8]];
+   stalls.forEach((asset,n)=>{
+     const [x,z]=stallSpots[n];
+     cloneAsset(asset,new B.Vector3(x,0,z),new B.Vector3(.88,.88,.88),"Historic market stall "+n);
+   });
+   for(const [x,z,s] of [[-69,-12,1],[-64,17,.9],[62,-22,1],[68,18,.95],[48,62,1],[-27,58,1.05]])
+     cloneAsset(oakTree,new B.Vector3(x,0,z),new B.Vector3(s,s,s),"Oak tree "+x+" "+z);
+   // Replace the old repeated cobble texture with real four-metre modular stone paving.
+   for(let x=-16;x<=16;x+=4)for(let z=-14;z<=14;z+=4)
+     cloneAsset(cobbleTile,new B.Vector3(x,-.15,z),new B.Vector3(1,1,1),"Market cobble "+x+" "+z);
+   setStatus("Načítané originálne CC0 3D modely domov, stánkov, stromov a dlažby.");
+ }).catch(err=>{console.error("Remote CC0 environment assets failed",err);setStatus("Niektoré externé 3D modely sa nepodarilo načítať.");});
  // Main thoroughfares, lanes and a fortified river crossing
  const roadNorth=B.MeshBuilder.CreateGround('north south processional street',{width:9,height:125},scene);roadNorth.position.set(0,.025,-8);roadNorth.material=road;roadNorth.checkCollisions=false;
  const roadWest=B.MeshBuilder.CreateGround('west market street',{width:130,height:8},scene);roadWest.position.set(-3,.026,-17);roadWest.material=road;
@@ -130,7 +138,7 @@ try {
  for(let z=-58;z<=42;z+=8){box('west city curtain wall',[-82,5,z],[2.6,10,7.8],stone);box('east city curtain wall',[82,5,z],[2.6,10,7.8],stone);}
  for(const [x,z] of [[-82,-63],[82,-63],[-82,42],[82,42]]){cyl('round defensive bastion',[x,8,z],10,16,stone);roofPeak(x,z,10,10,17,roof2);}
  // Broad market square, paving, fountain
- const marketFloor=box('continuous market square paving',[0,.015,0],[37,.08,31],marketPaving,false);marketFloor.checkCollisions=false;
+ const marketFloor=box('market square foundation',[0,-.11,0],[37,.12,31],stone,false);marketFloor.checkCollisions=false;
  cyl('market fountain base',[0,.5,2],4.4,1,stone);
  cyl('fountain basin',[0,1.05,2],3.4,.35,gold);
  cyl('fountain column',[0,2,2],.65,1.8,stone);
@@ -158,7 +166,7 @@ try {
  for(let i=0;i<4;i++){box('dock plank',[22+i*2,.1,47],[1.8,.35,18],dark,false);}
  const boat=box('merchant barge',[28,.15,58],[7,.65,16],dark,false);boat.rotation.y=.12;
  box('mast',[28,5,58],[.25,10,.25],dark,false);
- // Trees, barrels and carts are provided by the imported GLB asset set.
+ // Trees and architecture are loaded from the CC0 medieval asset kit.
  // lamps, banners and street clutter
  for(let x=-4;x<=4;x++)for(let z=-3;z<=2;z++){
    if((x+z)%2===0){const px=x*17+7,pz=z*17+6;if(pz<43){cyl('lamp post',[px,2.3,pz],.16,4.6,iron);box('lantern',[px,4.5,pz],[.65,.75,.65],gold,false);}}
@@ -248,6 +256,25 @@ try {
  const anna=person('Anna',-10,-4,green,1,'civilian');const guards=[person('Guard A',10,-18,red,1,'guard'),person('Guard B',-20,14,red,1,'guard'),person('Guard C',26,25,red,1,'guard')];
  const civilians=[person('Merchant',8,7,white,1,'civilian'),person('Citizen',-13,8,green,1,'civilian'),person('Dockworker',20,39,white,1,'civilian'),person('Citizen 2',-4,-14,white,1,'civilian')];
  const allNPC=[anna,...guards,...civilians];
+ const characterPromise=Promise.all([loadRemote("39193"),loadRemote("36337")]).then(([heroAsset,civilianAsset])=>{
+   const heroSource=rootOf(heroAsset),civilianSource=rootOf(civilianAsset);
+   // Replace every primitive block character with a finished, proportioned CC0 model.
+   for(const actor of [player,...allNPC]){
+     actor.root.getChildMeshes().forEach(m=>{m.isVisible=false;m.isPickable=false;});
+     const source=actor===player||guards.includes(actor)?heroSource:civilianSource;
+     const model=source.clone(actor.root.name+" detailed 3D model",actor.root,false);
+     model.setEnabled(true);model.isVisible=true;model.rotation.y=Math.PI;
+     const scale=source===heroSource?.70:1.0;
+     model.scaling.set(scale,scale,scale);
+     model.position.set(0,0,0);
+     model.getChildMeshes(false).forEach(m=>{m.setEnabled(true);m.isVisible=true;m.isPickable=false;m.checkCollisions=false;m.receiveShadows=true;});
+   }
+   const idle=heroAsset.animationGroups.find(g=>/idle/i.test(g.name));
+   if(idle)idle.start(true);
+   heroSource.setEnabled(false);civilianSource.setEnabled(false);
+   setStatus("Matej, Anna a obyvatelia používajú samostatné hotové 3D modely.");
+ }).catch(err=>{console.error("CC0 character models failed",err);setStatus("Postavy používajú záložné modely.");});
+
  // Props receive and cast shadows
  shadow.addShadowCaster(collider);ground.receiveShadows=true;
  // UI / state
@@ -309,7 +336,7 @@ try {
      if(p>=100){clearInterval(timer);setTimeout(()=>{loading.style.display='none';started=true;$('pause').style.display='block';toast('Prešporok, rok 1567. Nájdite Annu.');if(matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.();},250);}
    },110);
  });
- start.disabled=true;start.textContent='NAČÍTAVAM 3D MODELY…';assetPromise.finally(()=>{start.disabled=false;start.textContent='ZAČAŤ HRU';});setStatus('Načítavam 3D modely Prešporka…');$('errorBox').style.display='none';
+ start.disabled=true;start.textContent='NAČÍTAVAM 3D MODELY…';Promise.allSettled([assetPromise,characterPromise]).then(()=>{start.disabled=false;start.textContent='ZAČAŤ HRU';});setStatus('Načítavam 3D modely Prešporka…');$('errorBox').style.display='none';
  // Camera, movement and world simulation
  const vForward=new B.Vector3(),vRight=new B.Vector3();
  function update(dt,t){
