@@ -88,7 +88,7 @@ try {
    const w=11+((x*7+z*11+80)%4),d=10+((x*13-z*5+90)%4),h=9+((Math.abs(x*17+z*13))%9);
    housePlacements.push({x:bx,z:bz,sx:w/10,sy:h/10,sz:d/9});
  }
- const loadAsset=(id)=>B.SceneLoader.LoadAssetContainerAsync("https://cdn.3dassets.dev/assets/"+id+"/v1/","model.glb",scene);
+ const loadAsset=(file)=>B.SceneLoader.LoadAssetContainerAsync("./assets/",file,scene);
  const cloneAsset=(container,position,scale,name,rotation=0)=>{
    const instance=container.instantiateModelsToScene(n=>name+" "+n,false);
    const group=new B.TransformNode(name+" instance",scene);
@@ -96,47 +96,41 @@ try {
    group.position.copyFrom(position);group.scaling.copyFrom(scale);group.rotation.y=rotation;
    group.getChildMeshes(false).forEach(mesh=>{
      mesh.setEnabled(true);mesh.isVisible=true;mesh.isPickable=false;
-     mesh.checkCollisions=false;mesh.receiveShadows=true;shadow.addShadowCaster(mesh);
-     if(mesh.material&&mesh.material.getClassName?.()==="PBRMaterial"){mesh.material.environmentIntensity=1;mesh.material.roughness=Math.max(.55,mesh.material.roughness||.7);}
+     mesh.checkCollisions=false;mesh.receiveShadows=true;
+     if(!COARSE)shadow.addShadowCaster(mesh);
    });
    return group;
  };
  const assetPromise=Promise.all([
-   loadAsset("28759"),loadAsset("28760"),
-   loadAsset("28738"),loadAsset("28739"),loadAsset("28741"),
-   loadAsset("28779"),loadAsset("28726"),
-   loadAsset("28724"),loadAsset("28756"),loadAsset("28758"),
-   loadAsset("28737"),loadAsset("28719")
- ]).then(([houseMedium,houseLarge,stallRed,stallBlue,stallCream,oakTree,cobble,gatehouse,church,tavern,well,wall])=>{
-   // Real-scale CC0 GLBs: all pieces share metre units and +Y-up pivots.
+   "pressburg_house.glb","market_stall.glb","pressburg_tree.glb",
+   "michalska_gate.glb","st_martin_church.glb","pressburg_tavern.glb",
+   "town_well.glb","city_wall_segment.glb","cobble_tile.glb",
+   "oak_barrel.glb","wooden_cart.glb"
+ ].map(loadAsset)).then(([house,stall,tree,gatehouse,church,tavern,well,wall,cobble,barrel,cart])=>{
+   // Locally bundled GLB pack: no third-party runtime asset host and no missing-model fallback.
    housePlacements.forEach((p,n)=>{
      const near=(x,z,r)=>Math.hypot(p.x-x,p.z-z)<r;
-     if(near(0,-35,13)||near(-35,-13,15)||near(20,-25,13)||near(0,4,12)||near(-48,40,20))return;
-     const asset=n%5===0?houseLarge:houseMedium;
+     if(near(0,-35,15)||near(-35,-13,17)||near(20,-25,14)||near(0,4,13)||near(-48,40,20))return;
+     const k=[.92,1.0,1.06,.96,1.12][n%5];
      const rot=[0,Math.PI,Math.PI/2,-Math.PI/2][(n*7)%4];
-     cloneAsset(asset,new B.Vector3(p.x,0,p.z),new B.Vector3(1,1,1),"Prešporský dom "+n,rot);
-     const w=n%5===0?8.6:7.2,d=n%5===0?7:5.8,h=n%5===0?10.3:8.7;
-     const hit=B.MeshBuilder.CreateBox("kolízia domu "+n,{width:w,height:h,depth:d},scene);
-     hit.position.set(p.x,h/2,p.z);hit.isVisible=false;hit.checkCollisions=true;hit.isPickable=false;
+     cloneAsset(house,new B.Vector3(p.x,0,p.z),new B.Vector3(k,k,k),"Prešporský dom "+n,rot);
+     const hit=B.MeshBuilder.CreateBox("kolízia domu "+n,{width:9.8*k,height:11.2*k,depth:9.0*k},scene);
+     hit.position.set(p.x,5.6*k,p.z);hit.isVisible=false;hit.checkCollisions=true;hit.isPickable=false;
    });
-   // Distinct landmarks replace the former giant box-built silhouettes.
-   cloneAsset(gatehouse,new B.Vector3(0,0,-35),new B.Vector3(1.8,1.8,1.8),"Michalská brána");
-   cloneAsset(church,new B.Vector3(-35,0,-13),new B.Vector3(1.65,1.65,1.65),"Kostol svätého Martina");
+   cloneAsset(gatehouse,new B.Vector3(0,0,-35),new B.Vector3(1.45,1.45,1.45),"Michalská brána");
+   cloneAsset(church,new B.Vector3(-35,0,-13),new B.Vector3(1.2,1.2,1.2),"Kostol svätého Martina");
    cloneAsset(tavern,new B.Vector3(20,0,-25),new B.Vector3(1.0,1.0,1.0),"Prešporská krčma");
    cloneAsset(well,new B.Vector3(0,0,4),new B.Vector3(1,1,1),"Mestská studňa");
-   const stalls=[stallRed,stallBlue,stallCream,stallRed];
-   const stallSpots=[[-15,-6],[15,-6],[-15,10],[15,10]];
-   stalls.forEach((asset,n)=>cloneAsset(asset,new B.Vector3(stallSpots[n][0],0,stallSpots[n][1]),new B.Vector3(1,1,1),"Trhový stánok "+n));
-   for(const [x,z,scale] of [[-69,-12,1],[-64,17,.9],[62,-22,1],[68,18,.95],[48,62,1],[-27,58,1.05]])
-     cloneAsset(oakTree,new B.Vector3(x,0,z),new B.Vector3(scale,scale,scale),"Dub "+x+" "+z);
-   // Continuous four-metre cobble modules: no floating loose slabs or overlapping giant texture stones.
-   for(let x=-16;x<=16;x+=4)for(let z=-12;z<=12;z+=4)
-     cloneAsset(cobble,new B.Vector3(x,-.15,z),new B.Vector3(1,1,1),"Dlažba námestia "+x+" "+z);
-   for(let lane of [-4,0,4])for(let z=-60;z<=44;z+=4){
-     if(Math.abs(z)<=12)continue;
-     cloneAsset(cobble,new B.Vector3(lane,-.15,z),new B.Vector3(1,1,1),"Dlažba ulice "+lane+" "+z);
-   }
-   // Modular defensive wall, with correct four-metre spacing.
+   for(const [x,z,rot] of [[-15,-6,0],[15,-6,0],[-15,10,Math.PI],[15,10,Math.PI]])
+     cloneAsset(stall,new B.Vector3(x,0,z),new B.Vector3(1,1,1),"Trhový stánok "+x+" "+z,rot);
+   for(const [x,z,k] of [[-69,-12,1],[-64,17,.9],[62,-22,1],[68,18,.95],[48,62,1.05],[-27,58,1.05]])
+     cloneAsset(tree,new B.Vector3(x,-2.1,z),new B.Vector3(k,k,k),"Dub "+x+" "+z);
+   // Dense but light modular cobbles; each GLB is a single merged mesh.
+   for(let x=-20;x<=20;x+=4)for(let z=-16;z<=16;z+=4)
+     cloneAsset(cobble,new B.Vector3(x,-.10,z),new B.Vector3(1,1,1),"Dlažba námestia "+x+" "+z);
+   for(const [x,z] of [[-8,-10],[8,-10],[-18,4],[18,4],[-12,18],[12,18]])
+     cloneAsset(barrel,new B.Vector3(x,.31,z),new B.Vector3(1,1,1),"Dubový sud "+x+" "+z);
+   cloneAsset(cart,new B.Vector3(-21,0,7),new B.Vector3(1,1,1),"Drevený voz");
    for(let x=-80;x<=80;x+=4){
      cloneAsset(wall,new B.Vector3(x,0,-63),new B.Vector3(1,1,1),"Severný múr "+x);
      cloneAsset(wall,new B.Vector3(x,0,50),new B.Vector3(1,1,1),"Južný múr "+x);
@@ -145,8 +139,8 @@ try {
      cloneAsset(wall,new B.Vector3(-82,0,z),new B.Vector3(1,1,1),"Západný múr "+z,Math.PI/2);
      cloneAsset(wall,new B.Vector3(82,0,z),new B.Vector3(1,1,1),"Východný múr "+z,Math.PI/2);
    }
-   setStatus("Načítané hotové GLB modely mesta, pamiatok, trhu a dlažby.");
- }).catch(err=>{console.error("CC0 GLB loading failed",err);setStatus("Chyba pri načítaní 3D modelov: "+err.message);throw err;});
+   setStatus("Načítané lokálne 3D modely Prešporka, pamiatok, trhu a ulíc.");
+ }).catch(err=>{console.error("Local GLB loading failed",err);setStatus("Chyba lokálnych 3D modelov: "+err.message);throw err;});
  // The city, landmarks, streets and market are assembled from real-scale CC0 GLB assets above.
  // Character factory: sculpted silhouette, layered garments, articulated limbs and period equipment.
  function person(name,x,z,coat,scale=1,role='civilian'){
@@ -223,7 +217,8 @@ try {
      boxPart(name+' heraldic chest plate',root,[0,1.58,-.31],[.24,.32,.06],gold);
    }
    root.getChildMeshes().forEach(m=>m.scaling.scaleInPlace(scale));
-   return {root,armL,armR,legL,legR,fallbackMeshes:scene.meshes.filter(m=>m.name.startsWith(name+' ')),phase:Math.random()*6.28,alive:true,weapon:blade};
+   root.scaling.setAll(.68);
+   return {root,armL,armR,legL,legR,fallbackMeshes:root.getChildMeshes(false),phase:Math.random()*6.28,alive:true,weapon:blade};
  }
  const player=person('Matej Varga',0,8,blue,1,'hero');player.root.position.y=0;
  // Collision capsule proxy; visible rig follows proxy
@@ -277,8 +272,10 @@ try {
      if(!Number.isFinite(largest)||largest<.25||largest>20)throw new Error(label+" invalid source rig bounds: "+largest);
      const validRoots=measured.filter(x=>x.height>=largest*.72&&!/preview|thumbnail|miniature|icon|lod/i.test(x.node.name));
      if(!validRoots.length)validRoots.push(measured.find(x=>x.height===largest));
+     actor.root.scaling.setAll(1);
      const holder=new B.TransformNode(label+" rig root",scene);
      validRoots.forEach(({node})=>{node.parent=holder;node.setEnabled(true);});
+     measured.filter(x=>!validRoots.some(v=>v.node===x.node)).forEach(({node})=>node.dispose(false,false));
      measured.filter(x=>!validRoots.some(v=>v.node===x.node)).forEach(({node})=>node.dispose(false,false));
      holder.parent=actor.root;holder.position.set(0,0,0);holder.rotation.y=0;holder.scaling.set(1,1,1);
      holder.getChildMeshes(false).forEach(m=>{
